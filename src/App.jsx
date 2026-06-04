@@ -125,18 +125,6 @@ function App() {
 
   return (
     <div className="macro-scale-app">
-      {/* Header Panel */}
-      <header className="dashboard-header-bar">
-        <div className="header-brand">
-          <div className="header-brand-logo">M</div>
-          <h1 className="header-brand-name">MacroScale</h1>
-        </div>
-        <div className="header-meta-info">
-          <span className="live-status-dot"></span>
-          <span className="live-status-text">LIVE MARKET TERMINAL</span>
-        </div>
-      </header>
-
       {/* Main Grid - 2x2 cards layout */}
       <main className="dashboard-grid-2x2">
         <CommodityCard

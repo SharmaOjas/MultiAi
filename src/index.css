@@ -49,7 +49,7 @@ body {
   background-color: var(--bg-main);
   color: var(--text-primary);
   min-height: 100vh;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 /* Custom Scrollbars */
