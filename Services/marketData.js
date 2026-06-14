@@ -9,7 +9,7 @@ export const ASSET_CURRENCIES = {
   "BZ=F": "USD",
   "CL=F": "USD",
   "NG=F": "USD",
-  "XAG/USD": "USD",
+  "SI=F": "USD",
   "CT=F": "USD",
   "KE=F": "USD",
   "HRC=F": "USD",

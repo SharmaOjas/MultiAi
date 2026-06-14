@@ -24,7 +24,7 @@ const initialData = {
     { name: "Brent Crude", ticker: "BZ=F", value: "--", changePercent: "--", isPositive: null, history: [] },
     { name: "WTI Crude", ticker: "CL=F", value: "--", changePercent: "--", isPositive: null, history: [] },
     { name: "Natural Gas", ticker: "NG=F", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Silver", ticker: "XAG/USD", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Silver", ticker: "SI=F", value: "--", changePercent: "--", isPositive: null, history: [] },
     { name: "Cotton", ticker: "CT=F", value: "--", changePercent: "--", isPositive: null, history: [] },
     { name: "Wheat", ticker: "KE=F", value: "--", changePercent: "--", isPositive: null, history: [] },
     { name: "Steel", ticker: "HRC=F", value: "--", changePercent: "--", isPositive: null, history: [] },
@@ -78,7 +78,7 @@ function App() {
 
   // Local card-specific selection state managed as tickers
   const [selectedCommodityTicker, setSelectedCommodityTicker] = useState(initialData.commodity[0].ticker);
-  const [selectedInterestRateTicker, setSelectedInterestRateTicker] = useState(initialData.interest_rate[0].ticker);
+  const [selectedInterestRateTicker, setSelectedInterestRateTicker] = useState("^TNX");
   const [selectedEquityTicker, setSelectedEquityTicker] = useState(initialData.equity_index[0].ticker);
   const [selectedForexTicker, setSelectedForexTicker] = useState(initialData.forex[0].ticker);
 
