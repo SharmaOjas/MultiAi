@@ -38,30 +38,50 @@ const CardTooltip = ({ active, payload }) => {
   return null;
 };
 
+// Empty state placeholder for charts
+const NoDataOverlay = () => (
+  <div style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    height: "250px",
+    color: "var(--text-muted)",
+    fontFamily: "var(--mono)",
+    fontSize: "11px",
+    letterSpacing: "0.5px",
+    opacity: 0.5
+  }}>
+    NO DATA — CONFIGURE API
+  </div>
+);
+
 function EquityCard({ assets, selectedAsset, onSelectAsset }) {
   const [chartType, setChartType] = useState("line");
-  const strokeColor = selectedAsset.isPositive ? "#10b981" : "#ef4444";
+  const hasData = selectedAsset.history && selectedAsset.history.length > 0;
+  const strokeColor = selectedAsset.isPositive === null ? "#6b7280" : selectedAsset.isPositive ? "#10b981" : "#ef4444";
   
   // Enrich history with OHLC data
-  const enrichedHistory = enrichHistoryWithOHLC(selectedAsset.history);
+  const enrichedHistory = hasData ? enrichHistoryWithOHLC(selectedAsset.history) : [];
   
   // Dynamic domains for clean line fits
-  let domainMin, domainMax;
-  if (chartType === "candle") {
-    const highs = enrichedHistory.map(d => d.high);
-    const lows = enrichedHistory.map(d => d.low);
-    const minVal = Math.min(...lows);
-    const maxVal = Math.max(...highs);
-    const padding = (maxVal - minVal) * 0.1 || 10;
-    domainMin = Math.max(0, minVal - padding);
-    domainMax = maxVal + padding;
-  } else {
-    const values = selectedAsset.history.map(d => d.value);
-    const minVal = Math.min(...values);
-    const maxVal = Math.max(...values);
-    const padding = (maxVal - minVal) * 0.15 || 10;
-    domainMin = Math.max(0, minVal - padding);
-    domainMax = maxVal + padding;
+  let domainMin = 0, domainMax = 1;
+  if (hasData) {
+    if (chartType === "candle" && enrichedHistory.length > 0) {
+      const highs = enrichedHistory.map(d => d.high);
+      const lows = enrichedHistory.map(d => d.low);
+      const minVal = Math.min(...lows);
+      const maxVal = Math.max(...highs);
+      const padding = (maxVal - minVal) * 0.1 || 10;
+      domainMin = Math.max(0, minVal - padding);
+      domainMax = maxVal + padding;
+    } else {
+      const values = selectedAsset.history.map(d => d.value);
+      const minVal = Math.min(...values);
+      const maxVal = Math.max(...values);
+      const padding = (maxVal - minVal) * 0.15 || 10;
+      domainMin = Math.max(0, minVal - padding);
+      domainMax = maxVal + padding;
+    }
   }
 
   return (
@@ -89,7 +109,7 @@ function EquityCard({ assets, selectedAsset, onSelectAsset }) {
         <div className="card-menu-left-sidebar">
           {assets.map((asset) => {
             const isCurrent = asset.name === selectedAsset.name;
-            const assetChangeColor = asset.isPositive ? "text-up" : "text-down";
+            const assetChangeColor = asset.isPositive === null ? "text-muted" : asset.isPositive ? "text-up" : "text-down";
             return (
               <button
                 key={asset.name}
@@ -114,7 +134,7 @@ function EquityCard({ assets, selectedAsset, onSelectAsset }) {
             </div>
             <div className="active-asset-pricing">
               <span className="details-price-value">{selectedAsset.value}</span>
-              <span className={`details-change-pct-badge ${selectedAsset.isPositive ? "positive" : "negative"}`}>
+              <span className={`details-change-pct-badge ${selectedAsset.isPositive === null ? "neutral" : selectedAsset.isPositive ? "positive" : "negative"}`}>
                 {selectedAsset.changePercent}
               </span>
             </div>
@@ -122,65 +142,69 @@ function EquityCard({ assets, selectedAsset, onSelectAsset }) {
 
           {/* Chart Container */}
           <div className="card-chart-container">
-            <ResponsiveContainer width="100%" height={250}>
-              {chartType === "line" ? (
-                <LineChart
-                  data={selectedAsset.history}
-                  margin={{ top: 5, right: 5, left: -25, bottom: 5 }}
-                >
-                  <XAxis 
-                    dataKey="day" 
-                    stroke="var(--text-muted)" 
-                    fontSize={10} 
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis 
-                    stroke="var(--text-muted)" 
-                    fontSize={10} 
-                    tickLine={false}
-                    axisLine={false}
-                    domain={[domainMin, domainMax]}
-                    tickFormatter={(val) => val.toFixed(0)}
-                  />
-                  <Tooltip content={<CardTooltip />} cursor={{ stroke: "rgba(255, 255, 255, 0.05)" }} />
-                  <Line
-                    type="monotone"
-                    dataKey="value"
-                    stroke={strokeColor}
-                    strokeWidth={2.5}
-                    dot={{ r: 2.5, stroke: strokeColor, strokeWidth: 1 }}
-                    activeDot={{ r: 5 }}
-                  />
-                </LineChart>
-              ) : (
-                <ComposedChart
-                  data={enrichedHistory}
-                  margin={{ top: 10, right: 5, left: -25, bottom: 5 }}
-                >
-                  <XAxis 
-                    dataKey="day" 
-                    stroke="var(--text-muted)" 
-                    fontSize={10} 
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis 
-                    stroke="var(--text-muted)" 
-                    fontSize={10} 
-                    tickLine={false}
-                    axisLine={false}
-                    domain={[domainMin, domainMax]}
-                    tickFormatter={(val) => val.toFixed(0)}
-                  />
-                  <Tooltip content={<CandlestickTooltip />} cursor={{ fill: "rgba(255, 255, 255, 0.03)" }} />
-                  <Bar
-                    dataKey="range"
-                    shape={<CandlestickShape />}
-                  />
-                </ComposedChart>
-              )}
-            </ResponsiveContainer>
+            {!hasData ? (
+              <NoDataOverlay />
+            ) : (
+              <ResponsiveContainer width="100%" height={250}>
+                {chartType === "line" ? (
+                  <LineChart
+                    data={selectedAsset.history}
+                    margin={{ top: 5, right: 5, left: 0, bottom: 5 }}
+                  >
+                    <XAxis 
+                      dataKey="day" 
+                      stroke="var(--text-muted)" 
+                      fontSize={10} 
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis 
+                      stroke="var(--text-muted)" 
+                      fontSize={10} 
+                      tickLine={false}
+                      axisLine={false}
+                      domain={[domainMin, domainMax]}
+                      tickFormatter={(val) => val >= 1000000 ? (val / 1000000).toFixed(1) + 'M' : val >= 1000 ? (val / 1000).toFixed(1) + 'k' : val.toFixed(1)}
+                    />
+                    <Tooltip content={<CardTooltip />} cursor={{ stroke: "rgba(255, 255, 255, 0.05)" }} />
+                    <Line
+                      type="monotone"
+                      dataKey="value"
+                      stroke={strokeColor}
+                      strokeWidth={2.5}
+                      dot={{ r: 2.5, stroke: strokeColor, strokeWidth: 1 }}
+                      activeDot={{ r: 5 }}
+                    />
+                  </LineChart>
+                ) : (
+                  <ComposedChart
+                    data={enrichedHistory}
+                    margin={{ top: 10, right: 5, left: 0, bottom: 5 }}
+                  >
+                    <XAxis 
+                      dataKey="day" 
+                      stroke="var(--text-muted)" 
+                      fontSize={10} 
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis 
+                      stroke="var(--text-muted)" 
+                      fontSize={10} 
+                      tickLine={false}
+                      axisLine={false}
+                      domain={[domainMin, domainMax]}
+                      tickFormatter={(val) => val >= 1000000 ? (val / 1000000).toFixed(1) + 'M' : val >= 1000 ? (val / 1000).toFixed(1) + 'k' : val.toFixed(1)}
+                    />
+                    <Tooltip content={<CandlestickTooltip />} cursor={{ fill: "rgba(255, 255, 255, 0.03)" }} />
+                    <Bar
+                      dataKey="range"
+                      shape={<CandlestickShape />}
+                    />
+                  </ComposedChart>
+                )}
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
       </div>

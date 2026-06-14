@@ -309,6 +309,11 @@
   color: var(--color-down);
 }
 
+.details-change-pct-badge.neutral {
+  background-color: rgba(107, 114, 128, 0.15);
+  color: var(--text-muted);
+}
+
 /* Chart Container - Exactly 250px Height */
 .card-chart-container {
   height: 250px;

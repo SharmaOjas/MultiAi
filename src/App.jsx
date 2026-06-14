@@ -1,67 +1,86 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import CommodityCard from "../components/CommodityCard";
 import InterestRateCard from "../components/InterestRateCard";
 import EquityCard from "../components/EquityCard";
 import ForexCard from "../components/ForexCard";
 import SearchPanel from "../components/SearchPanel";
 import OutputPanel from "../components/OutputPanel";
+import {
+  getLatestQuotes,
+  getAssetHistory,
+  ASSET_CURRENCIES,
+  BASE_INR_EXCHANGE_RATES,
+  convertValue,
+  formatCurrencyValue,
+  parseStringToNumber,
+  fetchDynamicExchangeRates
+} from "../Services/marketData";
 import "./App.css";
 
-// Dynamic financial database containing 37 total assets with mock 5-day charts
+// Dynamic financial database — starts empty (shows "--" until API provides real data)
 const initialData = {
   commodity: [
-    { name: "Gold", ticker: "XAU/USD", value: "$2,342.50", changePercent: "+0.45%", isPositive: true, history: [{ day: "Mon", value: 2330 }, { day: "Tue", value: 2335 }, { day: "Wed", value: 2328 }, { day: "Thu", value: 2338 }, { day: "Fri", value: 2342.5 }] },
-    { name: "Brent Crude", ticker: "BZ=F", value: "$78.20", changePercent: "-1.25%", isPositive: false, history: [{ day: "Mon", value: 80.1 }, { day: "Tue", value: 79.5 }, { day: "Wed", value: 79.2 }, { day: "Thu", value: 78.9 }, { day: "Fri", value: 78.2 }] },
-    { name: "WTI Crude", ticker: "CL=F", value: "$74.10", changePercent: "-1.40%", isPositive: false, history: [{ day: "Mon", value: 76.0 }, { day: "Tue", value: 75.2 }, { day: "Wed", value: 74.9 }, { day: "Thu", value: 74.7 }, { day: "Fri", value: 74.1 }] },
-    { name: "Natural Gas", ticker: "NG=F", value: "$2.58", changePercent: "+2.10%", isPositive: true, history: [{ day: "Mon", value: 2.50 }, { day: "Tue", value: 2.52 }, { day: "Wed", value: 2.48 }, { day: "Thu", value: 2.54 }, { day: "Fri", value: 2.58 }] },
-    { name: "Silver", ticker: "XAG/USD", value: "$29.40", changePercent: "+1.10%", isPositive: true, history: [{ day: "Mon", value: 28.8 }, { day: "Tue", value: 28.9 }, { day: "Wed", value: 29.1 }, { day: "Thu", value: 29.2 }, { day: "Fri", value: 29.4 }] },
-    { name: "Cotton", ticker: "CT=F", value: "$75.80", changePercent: "-0.50%", isPositive: false, history: [{ day: "Mon", value: 76.5 }, { day: "Tue", value: 76.2 }, { day: "Wed", value: 76.0 }, { day: "Thu", value: 76.1 }, { day: "Fri", value: 75.8 }] },
-    { name: "Wheat", ticker: "KE=F", value: "$615.50", changePercent: "+0.75%", isPositive: true, history: [{ day: "Mon", value: 610.0 }, { day: "Tue", value: 612.0 }, { day: "Wed", value: 608.0 }, { day: "Thu", value: 611.0 }, { day: "Fri", value: 615.5 }] },
-    { name: "Steel", ticker: "HRC=F", value: "$725.00", changePercent: "-0.20%", isPositive: false, history: [{ day: "Mon", value: 730.0 }, { day: "Tue", value: 728.0 }, { day: "Wed", value: 726.0 }, { day: "Thu", value: 727.0 }, { day: "Fri", value: 725.0 }] },
-    { name: "Aluminium", ticker: "ALI=F", value: "$2,450.00", changePercent: "+0.35%", isPositive: true, history: [{ day: "Mon", value: 2430 }, { day: "Tue", value: 2435 }, { day: "Wed", value: 2440 }, { day: "Thu", value: 2442 }, { day: "Fri", value: 2450 }] },
-    { name: "Copper", ticker: "HG=F", value: "$4.52", changePercent: "-0.30%", isPositive: false, history: [{ day: "Mon", value: 4.58 }, { day: "Tue", value: 4.55 }, { day: "Wed", value: 4.56 }, { day: "Thu", value: 4.54 }, { day: "Fri", value: 4.52 }] },
-    { name: "Lithium", ticker: "LIT=F", value: "$13,200.00", changePercent: "-2.50%", isPositive: false, history: [{ day: "Mon", value: 13700 }, { day: "Tue", value: 13600 }, { day: "Wed", value: 13500 }, { day: "Thu", value: 13400 }, { day: "Fri", value: 13200 }] },
-    { name: "Zinc", ticker: "ZNC=F", value: "$2,840.00", changePercent: "+0.80%", isPositive: true, history: [{ day: "Mon", value: 2810 }, { day: "Tue", value: 2820 }, { day: "Wed", value: 2815 }, { day: "Thu", value: 2830 }, { day: "Fri", value: 2840 }] }
+    { name: "Gold ($)", ticker: "GC=F", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Brent Crude", ticker: "BZ=F", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "WTI Crude", ticker: "CL=F", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Natural Gas", ticker: "NG=F", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Silver", ticker: "XAG/USD", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Cotton", ticker: "CT=F", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Wheat", ticker: "KE=F", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Steel", ticker: "HRC=F", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Aluminium", ticker: "ALI=F", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Copper", ticker: "HG=F", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Lithium", ticker: "LIT=F", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Zinc", ticker: "ZNC=F", value: "--", changePercent: "--", isPositive: null, history: [] }
   ],
   interest_rate: [
-    { name: "India 2Y GSec", ticker: "IN2YT", value: "7.02%", changePercent: "-0.05%", isPositive: false, history: [{ day: "Mon", value: 7.06 }, { day: "Tue", value: 7.05 }, { day: "Wed", value: 7.04 }, { day: "Thu", value: 7.03 }, { day: "Fri", value: 7.02 }] },
-    { name: "India 10Y GSec", ticker: "IN10YT", value: "6.98%", changePercent: "-0.03%", isPositive: false, history: [{ day: "Mon", value: 7.01 }, { day: "Tue", value: 7.00 }, { day: "Wed", value: 7.00 }, { day: "Thu", value: 6.99 }, { day: "Fri", value: 6.98 }] },
-    { name: "US 2Y Treasury", ticker: "US2YT", value: "4.89%", changePercent: "-0.10%", isPositive: false, history: [{ day: "Mon", value: 4.95 }, { day: "Tue", value: 4.93 }, { day: "Wed", value: 4.92 }, { day: "Thu", value: 4.90 }, { day: "Fri", value: 4.89 }] },
-    { name: "US 10Y Treasury", ticker: "US10YT", value: "4.28%", changePercent: "+0.47%", isPositive: true, history: [{ day: "Mon", value: 4.21 }, { day: "Tue", value: 4.23 }, { day: "Wed", value: 4.22 }, { day: "Thu", value: 4.25 }, { day: "Fri", value: 4.28 }] },
-    { name: "Japan 2Y", ticker: "JP2YT", value: "0.35%", changePercent: "+2.90%", isPositive: true, history: [{ day: "Mon", value: 0.33 }, { day: "Tue", value: 0.33 }, { day: "Wed", value: 0.34 }, { day: "Thu", value: 0.34 }, { day: "Fri", value: 0.35 }] },
-    { name: "Japan 10Y", ticker: "JP10YT", value: "1.02%", changePercent: "+1.50%", isPositive: true, history: [{ day: "Mon", value: 0.99 }, { day: "Tue", value: 1.00 }, { day: "Wed", value: 1.01 }, { day: "Thu", value: 1.01 }, { day: "Fri", value: 1.02 }] },
-    { name: "China 2Y", ticker: "CN2YT", value: "1.88%", changePercent: "0.00%", isPositive: true, history: [{ day: "Mon", value: 1.88 }, { day: "Tue", value: 1.88 }, { day: "Wed", value: 1.88 }, { day: "Thu", value: 1.88 }, { day: "Fri", value: 1.88 }] },
-    { name: "China 10Y", ticker: "CN10YT", value: "2.29%", changePercent: "-0.43%", isPositive: false, history: [{ day: "Mon", value: 2.31 }, { day: "Tue", value: 2.30 }, { day: "Wed", value: 2.30 }, { day: "Thu", value: 2.29 }, { day: "Fri", value: 2.29 }] }
+    { name: "India 2Y GSec", ticker: "IN2YT=RR", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "India 10Y GSec", ticker: "IN10YT=RR", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "US 2Y Treasury", ticker: "US2YT=RR", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "US 10Y Treasury", ticker: "^TNX", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Japan 2Y", ticker: "JP2YT=RR", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Japan 10Y", ticker: "JP10YT=RR", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "China 2Y", ticker: "CN2YT=RR", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "China 10Y", ticker: "CN10YT=RR", value: "--", changePercent: "--", isPositive: null, history: [] }
   ],
   equity_index: [
-    { name: "Nifty50", ticker: "^NSEI", value: "23,260.30", changePercent: "+0.60%", isPositive: true, history: [{ day: "Mon", value: 23100 }, { day: "Tue", value: 23150 }, { day: "Wed", value: 23180 }, { day: "Thu", value: 23220 }, { day: "Fri", value: 23260.3 }] },
-    { name: "BankNifty", ticker: "^NSEBANK", value: "49,850.20", changePercent: "+0.85%", isPositive: true, history: [{ day: "Mon", value: 49400 }, { day: "Tue", value: 49550 }, { day: "Wed", value: 49680 }, { day: "Thu", value: 49750 }, { day: "Fri", value: 49850.2 }] },
-    { name: "Dow Jones", ticker: "^DJI", value: "38,880.10", changePercent: "-0.15%", isPositive: false, history: [{ day: "Mon", value: 39010 }, { day: "Tue", value: 38950 }, { day: "Wed", value: 38920 }, { day: "Thu", value: 38900 }, { day: "Fri", value: 38880.1 }] },
-    { name: "S&P500", ticker: "^GSPC", value: "5,432.75", changePercent: "+0.85%", isPositive: true, history: [{ day: "Mon", value: 5380 }, { day: "Tue", value: 5395 }, { day: "Wed", value: 5410 }, { day: "Thu", value: 5420 }, { day: "Fri", value: 5432.75 }] },
-    { name: "Nasdaq", ticker: "^IXIC", value: "19,250.40", changePercent: "+1.20%", isPositive: true, history: [{ day: "Mon", value: 18950 }, { day: "Tue", value: 19050 }, { day: "Wed", value: 19120 }, { day: "Thu", value: 19180 }, { day: "Fri", value: 19250.4 }] },
-    { name: "Nikkei", ticker: "^N225", value: "38,480.00", changePercent: "-0.40%", isPositive: false, history: [{ day: "Mon", value: 38700 }, { day: "Tue", value: 38650 }, { day: "Wed", value: 38600 }, { day: "Thu", value: 38520 }, { day: "Fri", value: 38480 }] },
-    { name: "Shanghai", ticker: "000001.SS", value: "3,080.50", changePercent: "-0.12%", isPositive: false, history: [{ day: "Mon", value: 3095 }, { day: "Tue", value: 3090 }, { day: "Wed", value: 3088 }, { day: "Thu", value: 3084 }, { day: "Fri", value: 3080.5 }] },
-    { name: "Hang Seng", ticker: "^HSI", value: "18,250.00", changePercent: "+0.55%", isPositive: true, history: [{ day: "Mon", value: 18120 }, { day: "Tue", value: 18150 }, { day: "Wed", value: 18190 }, { day: "Thu", value: 18210 }, { day: "Fri", value: 18250 }] },
-    { name: "DAX", ticker: "^GDAXI", value: "18,520.40", changePercent: "+0.22%", isPositive: true, history: [{ day: "Mon", value: 18450 }, { day: "Tue", value: 18480 }, { day: "Wed", value: 18490 }, { day: "Thu", value: 18510 }, { day: "Fri", value: 18520.4 }] },
-    { name: "CAC", ticker: "^FCHI", value: "7,950.20", changePercent: "-0.30%", isPositive: false, history: [{ day: "Mon", value: 7990 }, { day: "Tue", value: 7980 }, { day: "Wed", value: 7965 }, { day: "Thu", value: 7958 }, { day: "Fri", value: 7950.2 }] },
-    { name: "FTSE", ticker: "^FTSE", value: "8,240.50", changePercent: "+0.15%", isPositive: true, history: [{ day: "Mon", value: 8215 }, { day: "Tue", value: 8225 }, { day: "Wed", value: 8230 }, { day: "Thu", value: 8235 }, { day: "Fri", value: 8240.5 }] },
-    { name: "Bovespa", ticker: "^BVSP", value: "122,500.00", changePercent: "-0.65%", isPositive: false, history: [{ day: "Mon", value: 123500 }, { day: "Tue", value: 123200 }, { day: "Wed", value: 122900 }, { day: "Thu", value: 122700 }, { day: "Fri", value: 122500 }] },
-    { name: "MOEX", ticker: "IMOEX.ME", value: "3,180.20", changePercent: "+0.40%", isPositive: true, history: [{ day: "Mon", value: 3160 }, { day: "Tue", value: 3165 }, { day: "Wed", value: 3170 }, { day: "Thu", value: 3175 }, { day: "Fri", value: 3180.2 }] }
+    { name: "Nifty 50", ticker: "^NSEI", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Bank Nifty", ticker: "^NSEBANK", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "SENSEX", ticker: "^BSESN", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Nifty IT", ticker: "^NSEI_IT", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Nifty Auto", ticker: "^NSEI_AUTO", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Nifty Pharma", ticker: "^NSEI_PHARMA", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Nifty FMCG", ticker: "^NSEI_FMCG", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Nifty Metal", ticker: "^NSEI_METAL", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Nifty Realty", ticker: "^NSEI_REALTY", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Nifty Energy", ticker: "^NSEI_ENERGY", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Nifty Infra", ticker: "^NSEI_INFRA", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Nifty PSE", ticker: "^NSEI_PSE", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Nifty Next 50", ticker: "^NSEI_NEXT50", value: "--", changePercent: "--", isPositive: null, history: [] }
   ],
   forex: [
-    { name: "USD/INR", ticker: "USDINR=X", value: "83.52", changePercent: "-0.05%", isPositive: false, history: [{ day: "Mon", value: 83.60 }, { day: "Tue", value: 83.58 }, { day: "Wed", value: 83.55 }, { day: "Thu", value: 83.54 }, { day: "Fri", value: 83.52 }] },
-    { name: "DXY", ticker: "DX-Y.NYB", value: "104.15", changePercent: "+0.25%", isPositive: true, history: [{ day: "Mon", value: 103.80 }, { day: "Tue", value: 103.95 }, { day: "Wed", value: 104.10 }, { day: "Thu", value: 104.05 }, { day: "Fri", value: 104.15 }] },
-    { name: "EUR/INR", ticker: "EURINR=X", value: "90.45", changePercent: "-0.15%", isPositive: false, history: [{ day: "Mon", value: 90.80 }, { day: "Tue", value: 90.70 }, { day: "Wed", value: 90.62 }, { day: "Thu", value: 90.50 }, { day: "Fri", value: 90.45 }] },
-    { name: "JPY/INR", ticker: "JPYINR=X", value: "0.5340", changePercent: "+0.12%", isPositive: true, history: [{ day: "Mon", value: 0.5310 }, { day: "Tue", value: 0.5320 }, { day: "Wed", value: 0.5315 }, { day: "Thu", value: 0.5330 }, { day: "Fri", value: 0.5340 }] }
+    { name: "USD/INR", ticker: "USDINR=X", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "DXY", ticker: "DX-Y.NYB", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "EUR/INR", ticker: "EURINR=X", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "JPY/INR", ticker: "JPYINR=X", value: "--", changePercent: "--", isPositive: null, history: [] }
   ]
 };
 
 function App() {
-  // Local card-specific selection state managed in App to enable AI prompt triggers
-  const [selectedCommodity, setSelectedCommodity] = useState(initialData.commodity[0]);
-  const [selectedInterestRate, setSelectedInterestRate] = useState(initialData.interest_rate[0]);
-  const [selectedEquity, setSelectedEquity] = useState(initialData.equity_index[0]);
-  const [selectedForex, setSelectedForex] = useState(initialData.forex[0]);
+  const [marketData, setMarketData] = useState(initialData);
+  const [targetCurrency, setTargetCurrency] = useState("INR");
+  const [exchangeRates, setExchangeRates] = useState(BASE_INR_EXCHANGE_RATES);
+
+  // Upstox Access Token state (persisted via LocalStorage)
+  const [upstoxToken, setUpstoxToken] = useState(() => localStorage.getItem("upstox_access_token") || "");
+  const [tokenInput, setTokenInput] = useState(upstoxToken);
+  const [showConfig, setShowConfig] = useState(false);
+
+  // Local card-specific selection state managed as tickers
+  const [selectedCommodityTicker, setSelectedCommodityTicker] = useState(initialData.commodity[0].ticker);
+  const [selectedInterestRateTicker, setSelectedInterestRateTicker] = useState(initialData.interest_rate[0].ticker);
+  const [selectedEquityTicker, setSelectedEquityTicker] = useState(initialData.equity_index[0].ticker);
+  const [selectedForexTicker, setSelectedForexTicker] = useState(initialData.forex[0].ticker);
 
   // Control panel inputs & output panel state
   const [searchQuery, setSearchQuery] = useState("");
@@ -69,11 +88,165 @@ function App() {
   const [isPromptRunning, setIsPromptRunning] = useState(false);
   const [promptOutput, setPromptOutput] = useState("");
 
+  const marketDataRef = useRef(marketData);
+  useEffect(() => {
+    marketDataRef.current = marketData;
+  }, [marketData]);
+
+  // 1. Fetch daily exchange rates dynamically from Frankfurter on mount
+  useEffect(() => {
+    const loadExchangeRates = async () => {
+      const rates = await fetchDynamicExchangeRates();
+      setExchangeRates(rates);
+    };
+    loadExchangeRates();
+  }, []);
+
+  // 2. Fetch quotes in the background
+  useEffect(() => {
+    const loadQuotes = async () => {
+      const updated = await getLatestQuotes(
+        marketDataRef.current,
+        upstoxToken,
+        (rates) => {
+          setExchangeRates(prev => ({ ...prev, ...rates }));
+        }
+      );
+      setMarketData(updated);
+    };
+
+    loadQuotes();
+    const interval = setInterval(loadQuotes, 60000);
+    return () => clearInterval(interval);
+  }, [upstoxToken]);
+
+  // 3. Fetch real-time chart history when selected asset changes
+  useEffect(() => {
+    let isMounted = true;
+    
+    const fetchHistoryForTicker = async (ticker, category) => {
+      const list = marketDataRef.current[category];
+      const asset = list.find(a => a.ticker === ticker);
+      if (!asset || asset.hasRealHistory) return;
+
+      const realHistory = await getAssetHistory(ticker, upstoxToken, asset.history);
+      if (isMounted) {
+        setMarketData(prev => ({
+          ...prev,
+          [category]: prev[category].map(a => 
+            a.ticker === ticker 
+              ? { ...a, history: realHistory, hasRealHistory: true } 
+              : a
+          )
+        }));
+      }
+    };
+
+    fetchHistoryForTicker(selectedCommodityTicker, "commodity");
+    fetchHistoryForTicker(selectedInterestRateTicker, "interest_rate");
+    fetchHistoryForTicker(selectedEquityTicker, "equity_index");
+    fetchHistoryForTicker(selectedForexTicker, "forex");
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedCommodityTicker, selectedInterestRateTicker, selectedEquityTicker, selectedForexTicker, upstoxToken]);
+
+  // Configure Access Token handlers
+  const handleSaveToken = () => {
+    localStorage.setItem("upstox_access_token", tokenInput);
+    setUpstoxToken(tokenInput);
+    setShowConfig(false);
+    
+    // Clear hasRealHistory tags to trigger history re-fetch
+    setMarketData(prev => {
+      const reset = {};
+      Object.keys(prev).forEach(cat => {
+        reset[cat] = prev[cat].map(a => ({ ...a, hasRealHistory: false }));
+      });
+      return reset;
+    });
+  };
+
+  const handleClearToken = () => {
+    localStorage.removeItem("upstox_access_token");
+    setTokenInput("");
+    setUpstoxToken("");
+    setShowConfig(false);
+    setMarketData(initialData);
+  };
+
+  // Dynamic currency conversion helper
+  const convertAsset = (asset, category) => {
+    if (category === "interest_rate" || category === "forex") {
+      return asset;
+    }
+    
+    // If value is placeholder "--", skip conversion entirely
+    if (asset.value === "--" || asset.value === null || asset.value === undefined) {
+      return asset;
+    }
+    
+    const fromCurrency = ASSET_CURRENCIES[asset.ticker] || "USD";
+    const toCurrency = asset.ticker === "GC=F" ? "USD" : (targetCurrency === "Local" ? fromCurrency : targetCurrency);
+    
+    const rawValue = typeof asset.value === "number" 
+      ? asset.value 
+      : parseStringToNumber(asset.value);
+    
+    if (isNaN(rawValue) || rawValue === 0) {
+      return asset;
+    }
+    
+    const convertedValue = convertValue(rawValue, fromCurrency, toCurrency, exchangeRates);
+    const formattedValue = formatCurrencyValue(convertedValue, toCurrency);
+
+    // Convert chart data
+    const convertedHistory = (asset.history || []).map(item => {
+      const rawHistVal = parseStringToNumber(item.value);
+      if (isNaN(rawHistVal) || rawHistVal === 0) return item;
+      const convertedHistVal = convertValue(rawHistVal, fromCurrency, toCurrency, exchangeRates);
+      
+      const result = {
+        ...item,
+        value: convertedHistVal
+      };
+
+      if (item.open !== undefined) {
+        result.open = convertValue(parseStringToNumber(item.open), fromCurrency, toCurrency, exchangeRates);
+        result.high = convertValue(parseStringToNumber(item.high), fromCurrency, toCurrency, exchangeRates);
+        result.low = convertValue(parseStringToNumber(item.low), fromCurrency, toCurrency, exchangeRates);
+        result.close = convertValue(parseStringToNumber(item.close), fromCurrency, toCurrency, exchangeRates);
+      }
+
+      return result;
+    });
+
+    return {
+      ...asset,
+      value: formattedValue,
+      history: convertedHistory
+    };
+  };
+
+  // Build converted derived lists
+  const convertedData = {
+    commodity: marketData.commodity.map(a => convertAsset(a, "commodity")),
+    interest_rate: marketData.interest_rate.map(a => convertAsset(a, "interest_rate")),
+    equity_index: marketData.equity_index.map(a => convertAsset(a, "equity_index")),
+    forex: marketData.forex.map(a => convertAsset(a, "forex"))
+  };
+
+  // Select corresponding active converted assets
+  const selectedCommodity = convertedData.commodity.find(a => a.ticker === selectedCommodityTicker) || convertedData.commodity[0];
+  const selectedInterestRate = convertedData.interest_rate.find(a => a.ticker === selectedInterestRateTicker) || convertedData.interest_rate[0];
+  const selectedEquity = convertedData.equity_index.find(a => a.ticker === selectedEquityTicker) || convertedData.equity_index[0];
+  const selectedForex = convertedData.forex.find(a => a.ticker === selectedForexTicker) || convertedData.forex[0];
+
   const handleRunPrompt = () => {
     setIsPromptRunning(true);
     setPromptOutput("");
 
-    // Identify active asset based on chosen mode (1-4)
     let targetAsset = "";
     let targetDetails = "";
     const companyText = searchQuery.trim() ? `referencing key entity "${searchQuery.trim()}"` : "under current corporate holdings";
@@ -125,27 +298,187 @@ function App() {
 
   return (
     <div className="macro-scale-app">
+      {/* Dynamic Dashboard Header Bar */}
+      <header className="dashboard-header-bar">
+        <div className="header-brand">
+          <div className="header-brand-logo">M</div>
+          <h1 className="header-brand-name">MacroScale</h1>
+        </div>
+        
+        <div className="header-meta-group" style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          {/* API Configuration Button Overlay */}
+          <div className="api-config-container" style={{ position: "relative" }}>
+            <button
+              onClick={() => setShowConfig(!showConfig)}
+              style={{
+                backgroundColor: upstoxToken ? "var(--accent-bg)" : "rgba(255, 255, 255, 0.04)",
+                color: upstoxToken ? "var(--accent-light)" : "var(--text-secondary)",
+                border: `1px solid ${upstoxToken ? "var(--accent-border)" : "var(--border-color)"}`,
+                borderRadius: "6px",
+                padding: "5px 12px",
+                fontSize: "11px",
+                fontFamily: "var(--mono)",
+                fontWeight: "600",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                transition: "all 0.2s ease"
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              <span>{upstoxToken ? "ACTIVE TOKEN" : "CONFIGURE API"}</span>
+            </button>
+
+            {showConfig && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "34px",
+                  right: "0",
+                  width: "280px",
+                  backgroundColor: "var(--bg-card)",
+                  border: "1px solid var(--border-color)",
+                  borderRadius: "8px",
+                  padding: "16px",
+                  boxShadow: "0 12px 30px -5px rgba(0,0,0,0.8)",
+                  zIndex: 999,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "10px"
+                }}
+              >
+                <div style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-primary)", fontFamily: "var(--mono)" }}>
+                  UPSTOX ACCESS TOKEN
+                </div>
+                <input
+                  type="password"
+                  placeholder="Paste Upstox OAuth token..."
+                  value={tokenInput}
+                  onChange={(e) => setTokenInput(e.target.value)}
+                  style={{
+                    backgroundColor: "rgba(0, 0, 0, 0.3)",
+                    border: "1px solid var(--border-color)",
+                    borderRadius: "4px",
+                    padding: "8px 10px",
+                    color: "var(--text-primary)",
+                    fontSize: "11px",
+                    fontFamily: "var(--mono)",
+                    outline: "none",
+                    width: "100%"
+                  }}
+                />
+                <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
+                  <button
+                    onClick={handleSaveToken}
+                    style={{
+                      flex: 1,
+                      backgroundColor: "var(--accent)",
+                      border: "none",
+                      borderRadius: "4px",
+                      color: "white",
+                      padding: "8px",
+                      fontSize: "11px",
+                      fontFamily: "var(--sans)",
+                      fontWeight: "700",
+                      cursor: "pointer",
+                      transition: "opacity 0.15s ease"
+                    }}
+                  >
+                    Save
+                  </button>
+                  {upstoxToken && (
+                    <button
+                      onClick={handleClearToken}
+                      style={{
+                        backgroundColor: "rgba(239, 68, 68, 0.15)",
+                        border: "1px solid rgba(239, 68, 68, 0.3)",
+                        borderRadius: "4px",
+                        color: "#f87171",
+                        padding: "8px 12px",
+                        fontSize: "11px",
+                        fontFamily: "var(--sans)",
+                        fontWeight: "700",
+                        cursor: "pointer",
+                        transition: "opacity 0.15s ease"
+                      }}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Currency Selection Dropdown */}
+          <div className="currency-selector-wrapper" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <label 
+              htmlFor="currency-select" 
+              style={{ 
+                fontSize: "11px", 
+                color: "var(--text-secondary)", 
+                fontFamily: "var(--mono)", 
+                fontWeight: "bold" 
+              }}
+            >
+              CURRENCY:
+            </label>
+            <select
+              id="currency-select"
+              value={targetCurrency}
+              onChange={(e) => setTargetCurrency(e.target.value)}
+              style={{
+                backgroundColor: "var(--bg-card)",
+                color: "var(--text-primary)",
+                border: "1px solid var(--border-color)",
+                borderRadius: "4px",
+                padding: "4px 8px",
+                fontSize: "11px",
+                fontFamily: "var(--mono)",
+                outline: "none",
+                cursor: "pointer"
+              }}
+            >
+              <option value="INR">INR (₹)</option>
+              <option value="USD">USD ($)</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="GBP">GBP (£)</option>
+              <option value="Local">Local (Original)</option>
+            </select>
+          </div>
+
+          <div className="header-meta-info">
+            <span className="live-status-dot" />
+            <span className="live-status-text">LIVE MARKET FEED</span>
+          </div>
+        </div>
+      </header>
+
       {/* Main Grid - 2x2 cards layout */}
       <main className="dashboard-grid-2x2">
         <CommodityCard
-          assets={initialData.commodity}
+          assets={convertedData.commodity}
           selectedAsset={selectedCommodity}
-          onSelectAsset={setSelectedCommodity}
+          onSelectAsset={(asset) => setSelectedCommodityTicker(asset.ticker)}
         />
         <InterestRateCard
-          assets={initialData.interest_rate}
+          assets={convertedData.interest_rate}
           selectedAsset={selectedInterestRate}
-          onSelectAsset={setSelectedInterestRate}
+          onSelectAsset={(asset) => setSelectedInterestRateTicker(asset.ticker)}
         />
         <EquityCard
-          assets={initialData.equity_index}
+          assets={convertedData.equity_index}
           selectedAsset={selectedEquity}
-          onSelectAsset={setSelectedEquity}
+          onSelectAsset={(asset) => setSelectedEquityTicker(asset.ticker)}
         />
         <ForexCard
-          assets={initialData.forex}
+          assets={convertedData.forex}
           selectedAsset={selectedForex}
-          onSelectAsset={setSelectedForex}
+          onSelectAsset={(asset) => setSelectedForexTicker(asset.ticker)}
         />
       </main>
 

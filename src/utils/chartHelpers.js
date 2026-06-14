@@ -14,6 +14,19 @@ export const formatVal = (val) => {
 export const enrichHistoryWithOHLC = (history) => {
   if (!history || !Array.isArray(history)) return [];
   return history.map((item, index) => {
+    // If we already have full, valid OHLC data, preserve it and return
+    if (
+      item.open !== undefined &&
+      item.high !== undefined &&
+      item.low !== undefined &&
+      item.close !== undefined
+    ) {
+      return {
+        ...item,
+        range: [item.open, item.close]
+      };
+    }
+
     const close = item.value;
     
     // Base open on previous day's close, or make a minor variation for Mon
