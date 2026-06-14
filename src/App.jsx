@@ -46,17 +46,17 @@ const initialData = {
   equity_index: [
     { name: "Nifty 50", ticker: "^NSEI", value: "--", changePercent: "--", isPositive: null, history: [] },
     { name: "Bank Nifty", ticker: "^NSEBANK", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "SENSEX", ticker: "^BSESN", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Nifty IT", ticker: "^NSEI_IT", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Nifty Auto", ticker: "^NSEI_AUTO", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Nifty Pharma", ticker: "^NSEI_PHARMA", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Nifty FMCG", ticker: "^NSEI_FMCG", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Nifty Metal", ticker: "^NSEI_METAL", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Nifty Realty", ticker: "^NSEI_REALTY", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Nifty Energy", ticker: "^NSEI_ENERGY", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Nifty Infra", ticker: "^NSEI_INFRA", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Nifty PSE", ticker: "^NSEI_PSE", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Nifty Next 50", ticker: "^NSEI_NEXT50", value: "--", changePercent: "--", isPositive: null, history: [] }
+    { name: "Dow Jones", ticker: "^DJI", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "S&P 500", ticker: "^GSPC", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "NASDAQ", ticker: "^IXIC", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Nikkei", ticker: "^N225", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Shanghai", ticker: "000001.SS", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Hang Seng", ticker: "^HSI", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "DAX", ticker: "^GDAXI", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "CAC", ticker: "^FCHI", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "FTSE", ticker: "^FTSE", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "BOVESPA", ticker: "^BVSP", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "MOEX Russia", ticker: "IMOEX.ME", value: "--", changePercent: "--", isPositive: null, history: [] }
   ],
   forex: [
     { name: "USD/INR", ticker: "USDINR=X", value: "--", changePercent: "--", isPositive: null, history: [] },

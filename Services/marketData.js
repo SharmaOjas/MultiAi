@@ -4,7 +4,7 @@ import axios from "axios";
 // ASSET ORIGINAL CURRENCIES (Base Currencies)
 // ==========================================
 export const ASSET_CURRENCIES = {
-  // Commodities
+  // Commodities (USD)
   "GC=F": "USD",
   "BZ=F": "USD",
   "CL=F": "USD",
@@ -18,20 +18,36 @@ export const ASSET_CURRENCIES = {
   "LIT=F": "USD",
   "ZNC=F": "USD",
 
-  // Equity Indices (all INR via Upstox)
+  // Interest Rates (Yields, treated as local/absolute)
+  "IN2YT=RR": "Local",
+  "IN10YT=RR": "Local",
+  "US2YT=RR": "Local",
+  "^TNX": "Local",
+  "JP2YT=RR": "Local",
+  "JP10YT=RR": "Local",
+  "CN2YT=RR": "Local",
+  "CN10YT=RR": "Local",
+
+  // Equity Indices
   "^NSEI": "INR",
   "^NSEBANK": "INR",
-  "^BSESN": "INR",
-  "^NSEI_IT": "INR",
-  "^NSEI_AUTO": "INR",
-  "^NSEI_PHARMA": "INR",
-  "^NSEI_FMCG": "INR",
-  "^NSEI_METAL": "INR",
-  "^NSEI_REALTY": "INR",
-  "^NSEI_ENERGY": "INR",
-  "^NSEI_INFRA": "INR",
-  "^NSEI_PSE": "INR",
-  "^NSEI_NEXT50": "INR"
+  "^DJI": "USD",
+  "^GSPC": "USD",
+  "^IXIC": "USD",
+  "^N225": "JPY",
+  "000001.SS": "CNY",
+  "^HSI": "HKD",
+  "^GDAXI": "EUR",
+  "^FCHI": "EUR",
+  "^FTSE": "GBP",
+  "^BVSP": "BRL",
+  "IMOEX.ME": "RUB",
+
+  // Forex
+  "USDINR=X": "Local",
+  "DX-Y.NYB": "Local",
+  "EURINR=X": "Local",
+  "JPYINR=X": "Local"
 };
 
 // ==========================================
