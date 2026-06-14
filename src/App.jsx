@@ -34,8 +34,8 @@ const initialData = {
     { name: "Zinc", ticker: "ZNC=F", value: "--", changePercent: "--", isPositive: null, history: [] }
   ],
   interest_rate: [
-    { name: "India 2Y GSec", ticker: "IN2YT=RR", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "India 10Y GSec", ticker: "IN10YT=RR", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "India 2Y G-Sec", ticker: "IN2YT=RR", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "India 10Y G-Sec", ticker: "IN10YT=RR", value: "--", changePercent: "--", isPositive: null, history: [] },
     { name: "US 2Y Treasury", ticker: "US2YT=RR", value: "--", changePercent: "--", isPositive: null, history: [] },
     { name: "US 10Y Treasury", ticker: "^TNX", value: "--", changePercent: "--", isPositive: null, history: [] },
     { name: "Japan 2Y", ticker: "JP2YT=RR", value: "--", changePercent: "--", isPositive: null, history: [] },
@@ -55,7 +55,7 @@ const initialData = {
     { name: "DAX", ticker: "^GDAXI", value: "--", changePercent: "--", isPositive: null, history: [] },
     { name: "CAC", ticker: "^FCHI", value: "--", changePercent: "--", isPositive: null, history: [] },
     { name: "FTSE", ticker: "^FTSE", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "BOVESPA", ticker: "^BVSP", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Bovespa", ticker: "^BVSP", value: "--", changePercent: "--", isPositive: null, history: [] },
     { name: "MOEX Russia", ticker: "IMOEX.ME", value: "--", changePercent: "--", isPositive: null, history: [] }
   ],
   forex: [
