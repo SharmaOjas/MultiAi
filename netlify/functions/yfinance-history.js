@@ -1,6 +1,5 @@
-import yahooFinance from 'yahoo-finance2';
-
-yahooFinance.suppressNotices(['yahooSurvey']);
+import YahooFinance from 'yahoo-finance2';
+const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'], validation: { logErrors: false } });
 
 export const handler = async (event) => {
   try {
