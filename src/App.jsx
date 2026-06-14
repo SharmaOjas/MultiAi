@@ -34,8 +34,6 @@ const initialData = {
     { name: "Zinc", ticker: "ZNC=F", value: "--", changePercent: "--", isPositive: null, history: [] }
   ],
   interest_rate: [
-    { name: "India 2Y GSec", ticker: "IN2YT=RR", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "India 10Y GSec", ticker: "IN10YT=RR", value: "--", changePercent: "--", isPositive: null, history: [] },
     { name: "US 2Y Treasury", ticker: "US2YT=RR", value: "--", changePercent: "--", isPositive: null, history: [] },
     { name: "US 10Y Treasury", ticker: "^TNX", value: "--", changePercent: "--", isPositive: null, history: [] },
     { name: "Japan 2Y", ticker: "JP2YT=RR", value: "--", changePercent: "--", isPositive: null, history: [] },
