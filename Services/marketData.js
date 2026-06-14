@@ -295,12 +295,19 @@ export const getLatestQuotes = async (currentData, upstoxToken, onExchangeRatesU
         const ticker = asset.ticker;
         let quote = upstoxQuotesMap[ticker] || yahooQuotesMap[ticker];
         
-        // Mock fallback for delisted India GSecs
+        // Mock fallback for delisted India GSecs and Global Bonds on Yahoo Finance
         if (!quote) {
-          if (ticker === 'IN2YT=RR') {
-            quote = { price: 7.02, changePercent: -0.10 };
-          } else if (ticker === 'IN10YT=RR') {
-            quote = { price: 7.15, changePercent: 0.14 };
+          const mocks = {
+            'IN2YT=RR': { price: 7.02, changePercent: -0.10 },
+            'IN10YT=RR': { price: 7.15, changePercent: 0.14 },
+            'US2YT=RR': { price: 4.75, changePercent: 0.05 },
+            'JP2YT=RR': { price: 0.25, changePercent: 0.01 },
+            'JP10YT=RR': { price: 1.05, changePercent: 0.02 },
+            'CN2YT=RR': { price: 1.85, changePercent: -0.01 },
+            'CN10YT=RR': { price: 2.25, changePercent: -0.02 }
+          };
+          if (mocks[ticker]) {
+            quote = mocks[ticker];
           }
         }
 
@@ -350,24 +357,61 @@ export const getAssetHistory = async (ticker, upstoxToken, fallbackHistory) => {
         }));
       }
       
-      // MOCK FALLBACK for delisted India GSecs on Yahoo Finance so UI doesn't break
-      if (ticker === "IN2YT=RR") {
-        return [
+      // MOCK FALLBACK for delisted India GSecs and Global Bonds on Yahoo Finance so UI doesn't break
+      const mockHistoryMap = {
+        "IN2YT=RR": [
           { day: "Mon", value: 7.05, open: 7.02, high: 7.06, low: 7.01, close: 7.05 },
           { day: "Tue", value: 7.02, open: 7.05, high: 7.05, low: 6.99, close: 7.02 },
           { day: "Wed", value: 6.98, open: 7.02, high: 7.03, low: 6.95, close: 6.98 },
           { day: "Thu", value: 7.01, open: 6.98, high: 7.02, low: 6.98, close: 7.01 },
           { day: "Fri", value: 7.02, open: 7.01, high: 7.04, low: 7.00, close: 7.02 }
-        ];
-      }
-      if (ticker === "IN10YT=RR") {
-        return [
+        ],
+        "IN10YT=RR": [
           { day: "Mon", value: 7.18, open: 7.15, high: 7.20, low: 7.14, close: 7.18 },
           { day: "Tue", value: 7.15, open: 7.18, high: 7.19, low: 7.12, close: 7.15 },
           { day: "Wed", value: 7.10, open: 7.15, high: 7.16, low: 7.08, close: 7.10 },
           { day: "Thu", value: 7.12, open: 7.10, high: 7.14, low: 7.09, close: 7.12 },
           { day: "Fri", value: 7.15, open: 7.12, high: 7.17, low: 7.11, close: 7.15 }
-        ];
+        ],
+        "US2YT=RR": [
+          { day: "Mon", value: 4.70, open: 4.68, high: 4.72, low: 4.65, close: 4.70 },
+          { day: "Tue", value: 4.72, open: 4.70, high: 4.75, low: 4.68, close: 4.72 },
+          { day: "Wed", value: 4.75, open: 4.72, high: 4.78, low: 4.71, close: 4.75 },
+          { day: "Thu", value: 4.73, open: 4.75, high: 4.76, low: 4.70, close: 4.73 },
+          { day: "Fri", value: 4.75, open: 4.73, high: 4.77, low: 4.72, close: 4.75 }
+        ],
+        "JP2YT=RR": [
+          { day: "Mon", value: 0.22, open: 0.20, high: 0.23, low: 0.19, close: 0.22 },
+          { day: "Tue", value: 0.23, open: 0.22, high: 0.25, low: 0.21, close: 0.23 },
+          { day: "Wed", value: 0.24, open: 0.23, high: 0.26, low: 0.22, close: 0.24 },
+          { day: "Thu", value: 0.25, open: 0.24, high: 0.27, low: 0.23, close: 0.25 },
+          { day: "Fri", value: 0.25, open: 0.25, high: 0.26, low: 0.24, close: 0.25 }
+        ],
+        "JP10YT=RR": [
+          { day: "Mon", value: 1.02, open: 1.00, high: 1.04, low: 0.99, close: 1.02 },
+          { day: "Tue", value: 1.03, open: 1.02, high: 1.05, low: 1.01, close: 1.03 },
+          { day: "Wed", value: 1.05, open: 1.03, high: 1.07, low: 1.02, close: 1.05 },
+          { day: "Thu", value: 1.04, open: 1.05, high: 1.06, low: 1.03, close: 1.04 },
+          { day: "Fri", value: 1.05, open: 1.04, high: 1.06, low: 1.03, close: 1.05 }
+        ],
+        "CN2YT=RR": [
+          { day: "Mon", value: 1.88, open: 1.90, high: 1.92, low: 1.85, close: 1.88 },
+          { day: "Tue", value: 1.87, open: 1.88, high: 1.89, low: 1.84, close: 1.87 },
+          { day: "Wed", value: 1.85, open: 1.87, high: 1.88, low: 1.83, close: 1.85 },
+          { day: "Thu", value: 1.86, open: 1.85, high: 1.87, low: 1.84, close: 1.86 },
+          { day: "Fri", value: 1.85, open: 1.86, high: 1.88, low: 1.84, close: 1.85 }
+        ],
+        "CN10YT=RR": [
+          { day: "Mon", value: 2.28, open: 2.30, high: 2.32, low: 2.25, close: 2.28 },
+          { day: "Tue", value: 2.27, open: 2.28, high: 2.29, low: 2.24, close: 2.27 },
+          { day: "Wed", value: 2.25, open: 2.27, high: 2.28, low: 2.23, close: 2.25 },
+          { day: "Thu", value: 2.26, open: 2.25, high: 2.27, low: 2.24, close: 2.26 },
+          { day: "Fri", value: 2.25, open: 2.26, high: 2.28, low: 2.24, close: 2.25 }
+        ]
+      };
+      
+      if (mockHistoryMap[ticker]) {
+        return mockHistoryMap[ticker];
       }
 
       return fallbackHistory;
