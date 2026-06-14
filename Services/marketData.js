@@ -292,7 +292,6 @@ export const getLatestQuotes = async (currentData, upstoxToken, onExchangeRatesU
     const updatedData = { ...currentData };
     categories.forEach(category => {
       updatedData[category] = currentData[category].map(asset => {
-        let quote = null;
         const ticker = asset.ticker;
         let quote = upstoxQuotesMap[ticker] || yahooQuotesMap[ticker];
         
