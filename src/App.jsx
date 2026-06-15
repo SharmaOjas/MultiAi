@@ -71,11 +71,6 @@ function App() {
   const [targetCurrency, setTargetCurrency] = useState("INR");
   const [exchangeRates, setExchangeRates] = useState(BASE_INR_EXCHANGE_RATES);
 
-  // Upstox Access Token state (persisted via LocalStorage)
-  const [upstoxToken, setUpstoxToken] = useState(() => localStorage.getItem("upstox_access_token") || "");
-  const [tokenInput, setTokenInput] = useState(upstoxToken);
-  const [showConfig, setShowConfig] = useState(false);
-
   // Local card-specific selection state managed as tickers
   const [selectedCommodityTicker, setSelectedCommodityTicker] = useState(initialData.commodity[0].ticker);
   const [selectedInterestRateTicker, setSelectedInterestRateTicker] = useState("^TNX");
@@ -102,40 +97,35 @@ function App() {
     loadExchangeRates();
   }, []);
 
-  // 2. Fetch quotes in the background
+  // 2. Fetch EOD quotes on mount (Yahoo Finance — previous close)
   useEffect(() => {
     const loadQuotes = async () => {
-      const updated = await getLatestQuotes(
-        marketDataRef.current,
-        upstoxToken,
-        (rates) => {
-          setExchangeRates(prev => ({ ...prev, ...rates }));
-        }
-      );
+      const updated = await getLatestQuotes(marketDataRef.current);
       setMarketData(updated);
     };
 
     loadQuotes();
-    const interval = setInterval(loadQuotes, 60000);
+    // Refresh once a day (86 400 000 ms) — EOD data doesn't need frequent polling
+    const interval = setInterval(loadQuotes, 86400000);
     return () => clearInterval(interval);
-  }, [upstoxToken]);
+  }, []);
 
-  // 3. Fetch real-time chart history when selected asset changes
+  // 3. Fetch chart history when selected asset changes
   useEffect(() => {
     let isMounted = true;
-    
+
     const fetchHistoryForTicker = async (ticker, category) => {
       const list = marketDataRef.current[category];
       const asset = list.find(a => a.ticker === ticker);
       if (!asset || asset.hasRealHistory) return;
 
-      const realHistory = await getAssetHistory(ticker, upstoxToken, asset.history);
+      const realHistory = await getAssetHistory(ticker, null, asset.history);
       if (isMounted) {
         setMarketData(prev => ({
           ...prev,
-          [category]: prev[category].map(a => 
-            a.ticker === ticker 
-              ? { ...a, history: realHistory, hasRealHistory: true } 
+          [category]: prev[category].map(a =>
+            a.ticker === ticker
+              ? { ...a, history: realHistory, hasRealHistory: true }
               : a
           )
         }));
@@ -150,31 +140,7 @@ function App() {
     return () => {
       isMounted = false;
     };
-  }, [selectedCommodityTicker, selectedInterestRateTicker, selectedEquityTicker, selectedForexTicker, upstoxToken]);
-
-  // Configure Access Token handlers
-  const handleSaveToken = () => {
-    localStorage.setItem("upstox_access_token", tokenInput);
-    setUpstoxToken(tokenInput);
-    setShowConfig(false);
-    
-    // Clear hasRealHistory tags to trigger history re-fetch
-    setMarketData(prev => {
-      const reset = {};
-      Object.keys(prev).forEach(cat => {
-        reset[cat] = prev[cat].map(a => ({ ...a, hasRealHistory: false }));
-      });
-      return reset;
-    });
-  };
-
-  const handleClearToken = () => {
-    localStorage.removeItem("upstox_access_token");
-    setTokenInput("");
-    setUpstoxToken("");
-    setShowConfig(false);
-    setMarketData(initialData);
-  };
+  }, [selectedCommodityTicker, selectedInterestRateTicker, selectedEquityTicker, selectedForexTicker]);
 
   // Dynamic currency conversion helper
   const convertAsset = (asset, category) => {
@@ -306,114 +272,6 @@ function App() {
         </div>
         
         <div className="header-meta-group" style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-          {/* API Configuration Button Overlay */}
-          <div className="api-config-container" style={{ position: "relative" }}>
-            <button
-              onClick={() => setShowConfig(!showConfig)}
-              style={{
-                backgroundColor: upstoxToken ? "var(--accent-bg)" : "rgba(255, 255, 255, 0.04)",
-                color: upstoxToken ? "var(--accent-light)" : "var(--text-secondary)",
-                border: `1px solid ${upstoxToken ? "var(--accent-border)" : "var(--border-color)"}`,
-                borderRadius: "6px",
-                padding: "5px 12px",
-                fontSize: "11px",
-                fontFamily: "var(--mono)",
-                fontWeight: "600",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                transition: "all 0.2s ease"
-              }}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
-              <span>{upstoxToken ? "ACTIVE TOKEN" : "CONFIGURE API"}</span>
-            </button>
-
-            {showConfig && (
-              <div
-                style={{
-                  position: "absolute",
-                  top: "34px",
-                  right: "0",
-                  width: "280px",
-                  backgroundColor: "var(--bg-card)",
-                  border: "1px solid var(--border-color)",
-                  borderRadius: "8px",
-                  padding: "16px",
-                  boxShadow: "0 12px 30px -5px rgba(0,0,0,0.8)",
-                  zIndex: 999,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "10px"
-                }}
-              >
-                <div style={{ fontSize: "11px", fontWeight: "700", color: "var(--text-primary)", fontFamily: "var(--mono)" }}>
-                  UPSTOX ACCESS TOKEN
-                </div>
-                <input
-                  type="password"
-                  placeholder="Paste Upstox OAuth token..."
-                  value={tokenInput}
-                  onChange={(e) => setTokenInput(e.target.value)}
-                  style={{
-                    backgroundColor: "rgba(0, 0, 0, 0.3)",
-                    border: "1px solid var(--border-color)",
-                    borderRadius: "4px",
-                    padding: "8px 10px",
-                    color: "var(--text-primary)",
-                    fontSize: "11px",
-                    fontFamily: "var(--mono)",
-                    outline: "none",
-                    width: "100%"
-                  }}
-                />
-                <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
-                  <button
-                    onClick={handleSaveToken}
-                    style={{
-                      flex: 1,
-                      backgroundColor: "var(--accent)",
-                      border: "none",
-                      borderRadius: "4px",
-                      color: "white",
-                      padding: "8px",
-                      fontSize: "11px",
-                      fontFamily: "var(--sans)",
-                      fontWeight: "700",
-                      cursor: "pointer",
-                      transition: "opacity 0.15s ease"
-                    }}
-                  >
-                    Save
-                  </button>
-                  {upstoxToken && (
-                    <button
-                      onClick={handleClearToken}
-                      style={{
-                        backgroundColor: "rgba(239, 68, 68, 0.15)",
-                        border: "1px solid rgba(239, 68, 68, 0.3)",
-                        borderRadius: "4px",
-                        color: "#f87171",
-                        padding: "8px 12px",
-                        fontSize: "11px",
-                        fontFamily: "var(--sans)",
-                        fontWeight: "700",
-                        cursor: "pointer",
-                        transition: "opacity 0.15s ease"
-                      }}
-                    >
-                      Clear
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
           {/* Currency Selection Dropdown */}
           <div className="currency-selector-wrapper" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <label 
@@ -453,7 +311,7 @@ function App() {
 
           <div className="header-meta-info">
             <span className="live-status-dot" />
-            <span className="live-status-text">LIVE MARKET FEED</span>
+            <span className="live-status-text">EOD MARKET DATA</span>
           </div>
         </div>
       </header>

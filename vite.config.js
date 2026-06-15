@@ -11,7 +11,7 @@ function yahooFinancePlugin() {
   return {
     name: 'yahoo-finance-api',
     configureServer(server) {
-      // Endpoint for multiple live quotes
+      // Endpoint: EOD quotes (previous close) for multiple symbols
       server.middlewares.use('/api/yfinance/quotes', async (req, res) => {
         const url = new URL(req.url, `http://${req.headers.host}`);
         const symbols = url.searchParams.get('symbols');
@@ -21,17 +21,18 @@ function yahooFinancePlugin() {
         }
         try {
           const symList = symbols.split(',');
-          
-          // Fetch each quote individually, ignoring failures
+
           const results = await Promise.allSettled(
-            symList.map(sym => yahooFinance.quote(sym))
+            // validateResult:false lets tickers like CT=F (ICE futures) return
+            // their data even when yahoo-finance2 schema validation would reject them.
+            symList.map(sym => yahooFinance.quote(sym, {}, { validateResult: false }))
           );
-          
+
           const dataArray = results
-            .filter(result => result.status === 'fulfilled' && result.value)
-            .map(result => Array.isArray(result.value) ? result.value[0] : result.value)
+            .filter(r => r.status === 'fulfilled' && r.value)
+            .map(r => (Array.isArray(r.value) ? r.value[0] : r.value))
             .filter(Boolean);
-          
+
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify(dataArray));
         } catch (e) {
@@ -40,7 +41,7 @@ function yahooFinancePlugin() {
         }
       });
 
-      // Endpoint for historical charts
+      // Endpoint: 5-day daily OHLC history for a single symbol
       server.middlewares.use('/api/yfinance/history', async (req, res) => {
         const url = new URL(req.url, `http://${req.headers.host}`);
         const symbol = url.searchParams.get('symbol');
@@ -50,7 +51,7 @@ function yahooFinancePlugin() {
         }
         try {
           const result = await yahooFinance.chart(symbol, {
-            period1: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // last 10 days
+            period1: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // last 10 calendar days
             period2: new Date(),
             interval: '1d'
           });
@@ -69,10 +70,11 @@ export default defineConfig({
   plugins: [react(), yahooFinancePlugin()],
   server: {
     proxy: {
-      '/api/upstox': {
-        target: 'https://api.upstox.com',
+      // Proxy Frankfurter exchange-rate API to avoid browser CORS issues
+      '/api/frankfurter': {
+        target: 'https://api.frankfurter.app',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/upstox/, '')
+        rewrite: (path) => path.replace(/^\/api\/frankfurter/, '')
       }
     }
   }

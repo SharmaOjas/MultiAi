@@ -124,7 +124,7 @@ export const formatCurrencyValue = (val, currency) => {
 // ==========================================
 export const fetchDynamicExchangeRates = async () => {
   try {
-    const response = await axios.get("https://api.frankfurter.app/latest?from=INR");
+    const response = await axios.get("/api/frankfurter/latest?from=INR");
     const rates = response.data?.rates || {};
     
     // Initialize rates map with base currency INR = 1.0
@@ -144,177 +144,160 @@ export const fetchDynamicExchangeRates = async () => {
 };
 
 // ==========================================
-// UPSTOX TICKER MAP
-// Maps our internal ticker IDs to Upstox instrument_key format
-// Response keys from Upstox use ":" (colon), request keys use "|" (pipe)
+// MOCK DATA for tickers not supported on Yahoo Finance
+// (India/Japan/China bond yields, etc.)
 // ==========================================
-const UPSTOX_TICKER_MAP = {
-  // Equity Indices (these work reliably with Upstox free API)
-  "^NSEI": "NSE_INDEX|Nifty 50",
-  "^NSEBANK": "NSE_INDEX|Nifty Bank",
-  "^BSESN": "BSE_INDEX|SENSEX",
-  "^NSEI_IT": "NSE_INDEX|Nifty IT",
-  "^NSEI_AUTO": "NSE_INDEX|Nifty Auto",
-  "^NSEI_PHARMA": "NSE_INDEX|Nifty Pharma",
-  "^NSEI_FMCG": "NSE_INDEX|Nifty FMCG",
-  "^NSEI_METAL": "NSE_INDEX|Nifty Metal",
-  "^NSEI_REALTY": "NSE_INDEX|Nifty Realty",
-  "^NSEI_ENERGY": "NSE_INDEX|Nifty Energy",
-  "^NSEI_INFRA": "NSE_INDEX|Nifty Infrastructure",
-  "^NSEI_PSE": "NSE_INDEX|Nifty PSE",
-  "^NSEI_NEXT50": "NSE_INDEX|Nifty Next 50"
+const MOCK_QUOTES = {
+  'IN2YT=RR':  { price: 7.02, changePercent: -0.10 },
+  'IN10YT=RR': { price: 7.15, changePercent: 0.14 },
+  'US2YT=RR':  { price: 4.75, changePercent: 0.05 },
+  'JP2YT=RR':  { price: 0.25, changePercent: 0.01 },
+  'JP10YT=RR': { price: 1.05, changePercent: 0.02 },
+  'CN2YT=RR':  { price: 1.85, changePercent: -0.01 },
+  'CN10YT=RR': { price: 2.25, changePercent: -0.02 }
+};
+
+const MOCK_HISTORY = {
+  "IN2YT=RR": [
+    { day: "Mon", value: 7.05, open: 7.02, high: 7.06, low: 7.01, close: 7.05 },
+    { day: "Tue", value: 7.02, open: 7.05, high: 7.05, low: 6.99, close: 7.02 },
+    { day: "Wed", value: 6.98, open: 7.02, high: 7.03, low: 6.95, close: 6.98 },
+    { day: "Thu", value: 7.01, open: 6.98, high: 7.02, low: 6.98, close: 7.01 },
+    { day: "Fri", value: 7.02, open: 7.01, high: 7.04, low: 7.00, close: 7.02 }
+  ],
+  "IN10YT=RR": [
+    { day: "Mon", value: 7.18, open: 7.15, high: 7.20, low: 7.14, close: 7.18 },
+    { day: "Tue", value: 7.15, open: 7.18, high: 7.19, low: 7.12, close: 7.15 },
+    { day: "Wed", value: 7.10, open: 7.15, high: 7.16, low: 7.08, close: 7.10 },
+    { day: "Thu", value: 7.12, open: 7.10, high: 7.14, low: 7.09, close: 7.12 },
+    { day: "Fri", value: 7.15, open: 7.12, high: 7.17, low: 7.11, close: 7.15 }
+  ],
+  "US2YT=RR": [
+    { day: "Mon", value: 4.70, open: 4.68, high: 4.72, low: 4.65, close: 4.70 },
+    { day: "Tue", value: 4.72, open: 4.70, high: 4.75, low: 4.68, close: 4.72 },
+    { day: "Wed", value: 4.75, open: 4.72, high: 4.78, low: 4.71, close: 4.75 },
+    { day: "Thu", value: 4.73, open: 4.75, high: 4.76, low: 4.70, close: 4.73 },
+    { day: "Fri", value: 4.75, open: 4.73, high: 4.77, low: 4.72, close: 4.75 }
+  ],
+  "JP2YT=RR": [
+    { day: "Mon", value: 0.22, open: 0.20, high: 0.23, low: 0.19, close: 0.22 },
+    { day: "Tue", value: 0.23, open: 0.22, high: 0.25, low: 0.21, close: 0.23 },
+    { day: "Wed", value: 0.24, open: 0.23, high: 0.26, low: 0.22, close: 0.24 },
+    { day: "Thu", value: 0.25, open: 0.24, high: 0.27, low: 0.23, close: 0.25 },
+    { day: "Fri", value: 0.25, open: 0.25, high: 0.26, low: 0.24, close: 0.25 }
+  ],
+  "JP10YT=RR": [
+    { day: "Mon", value: 1.02, open: 1.00, high: 1.04, low: 0.99, close: 1.02 },
+    { day: "Tue", value: 1.03, open: 1.02, high: 1.05, low: 1.01, close: 1.03 },
+    { day: "Wed", value: 1.05, open: 1.03, high: 1.07, low: 1.02, close: 1.05 },
+    { day: "Thu", value: 1.04, open: 1.05, high: 1.06, low: 1.03, close: 1.04 },
+    { day: "Fri", value: 1.05, open: 1.04, high: 1.06, low: 1.03, close: 1.05 }
+  ],
+  "CN2YT=RR": [
+    { day: "Mon", value: 1.88, open: 1.90, high: 1.92, low: 1.85, close: 1.88 },
+    { day: "Tue", value: 1.87, open: 1.88, high: 1.89, low: 1.84, close: 1.87 },
+    { day: "Wed", value: 1.85, open: 1.87, high: 1.88, low: 1.83, close: 1.85 },
+    { day: "Thu", value: 1.86, open: 1.85, high: 1.87, low: 1.84, close: 1.86 },
+    { day: "Fri", value: 1.85, open: 1.86, high: 1.88, low: 1.84, close: 1.85 }
+  ],
+  "CN10YT=RR": [
+    { day: "Mon", value: 2.28, open: 2.30, high: 2.32, low: 2.25, close: 2.28 },
+    { day: "Tue", value: 2.27, open: 2.28, high: 2.29, low: 2.24, close: 2.27 },
+    { day: "Wed", value: 2.25, open: 2.27, high: 2.28, low: 2.23, close: 2.25 },
+    { day: "Thu", value: 2.26, open: 2.25, high: 2.27, low: 2.24, close: 2.26 },
+    { day: "Fri", value: 2.25, open: 2.26, high: 2.28, low: 2.24, close: 2.25 }
+  ]
+};
+
+// ==========================================
+// YAHOO FINANCE — EOD QUOTES
+// ==========================================
+
+// Maps JS Date.getDay() index → short day name
+const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+/**
+ * Returns the short weekday name ("Mon", "Tue", ...) for a given date value.
+ * Accepts a Date object, ISO string, or Unix timestamp (ms).
+ */
+export const getDayLabel = (dateVal) => {
+  if (!dateVal) return "--";
+  const d = dateVal instanceof Date ? dateVal : new Date(dateVal);
+  return isNaN(d.getTime()) ? "--" : DAY_NAMES[d.getDay()];
 };
 
 /**
- * Convert Upstox instrument_key (pipe) to response key format (colon)
- * e.g., "NSE_INDEX|Nifty 50" → "NSE_INDEX:Nifty 50"
- */
-const toResponseKey = (instrumentKey) => instrumentKey.replace("|", ":");
-
-/**
- * Fetches real-time quotes using Upstox API
- */
-const fetchUpstoxQuotes = async (symbols, upstoxToken) => {
-  const upstoxKeys = symbols
-    .map(sym => UPSTOX_TICKER_MAP[sym])
-    .filter(Boolean);
-
-  if (upstoxKeys.length === 0) return {};
-
-  // Create a reverse map from Upstox instrument key to original ticker
-  const upstoxToTicker = {};
-  symbols.forEach(sym => {
-    if (UPSTOX_TICKER_MAP[sym]) {
-      upstoxToTicker[UPSTOX_TICKER_MAP[sym]] = sym;
-    }
-  });
-
-  try {
-    const response = await axios.get(
-      "/api/upstox/v2/market-quote/quotes",
-      {
-        params: { instrument_key: upstoxKeys.join(",") },
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer ${upstoxToken}`
-        }
-      }
-    );
-
-    const data = response.data?.data || {};
-    const quotesMap = {};
-    
-    Object.keys(data).forEach(responseKey => {
-      const item = data[responseKey];
-      const instrKey = item.instrument_token || responseKey.replace(":", "|");
-      const lastPrice = item.last_price;
-      const netChange = item.net_change;
-      
-      // Calculate change percentage from net_change
-      let changePercent = 0;
-      if (netChange !== undefined && lastPrice !== undefined) {
-        const prevClose = lastPrice - netChange;
-        if (prevClose !== 0) {
-          changePercent = (netChange / prevClose) * 100;
-        }
-      }
-      
-      const originalTicker = upstoxToTicker[instrKey];
-      if (originalTicker) {
-        quotesMap[originalTicker] = {
-          price: lastPrice,
-          changePercent: changePercent,
-          ohlc: item.ohlc
-        };
-      }
-    });
-    
-    return quotesMap;
-  } catch (error) {
-    console.warn("Failed fetching Upstox quotes:", error);
-    return {};
-  }
-};
-
-/**
- * Fetches real-time quotes using local Yahoo Finance plugin
+ * Fetches EOD quotes via the local Yahoo Finance Vite plugin.
+ *
+ * Price logic:
+ *   - regularMarketPrice  = last traded price (= close when market is shut)
+ *   - regularMarketChangePercent = change vs. previous session's close
+ * Both fields describe the same session, so they are always consistent.
  */
 const fetchYahooQuotes = async (symbols) => {
   if (symbols.length === 0) return {};
-  
+
   try {
     const response = await axios.get('/api/yfinance/quotes', {
       params: { symbols: symbols.join(',') }
     });
-    
+
     const quotesMap = {};
     if (Array.isArray(response.data)) {
       response.data.forEach(item => {
         if (item && item.symbol) {
-          quotesMap[item.symbol] = {
-            price: item.regularMarketPrice,
-            changePercent: item.regularMarketChangePercent
-          };
+          // Use regularMarketPrice — it equals the session close when the
+          // exchange is shut, and is always paired with regularMarketChangePercent.
+          const price = item.regularMarketPrice ?? null;
+          const changePercent = item.regularMarketChangePercent ?? 0;
+
+          quotesMap[item.symbol] = { price, changePercent };
         }
       });
     }
     return quotesMap;
   } catch (error) {
-    console.warn("Failed fetching Yahoo quotes:", error);
+    console.warn("Failed fetching Yahoo Finance EOD quotes:", error);
     return {};
   }
 };
 
+// ==========================================
+// MAIN QUOTE FETCHER — all assets via Yahoo Finance
+// ==========================================
+
 /**
- * Main function to fetch quotes for all dashboard assets
+ * Fetches end-of-day quotes for all dashboard assets using Yahoo Finance.
+ * Upstox has been fully removed.
  */
-export const getLatestQuotes = async (currentData, upstoxToken, onExchangeRatesUpdate) => {
+export const getLatestQuotes = async (currentData, _unused, onExchangeRatesUpdate) => {
   try {
     const categories = Object.keys(currentData);
-    const upstoxTickers = [];
-    const yahooTickers = [];
 
+    // Collect every ticker that's NOT a mock-only one
+    const yahooTickers = [];
     categories.forEach(category => {
       currentData[category].forEach(asset => {
-        if (UPSTOX_TICKER_MAP[asset.ticker]) {
-          upstoxTickers.push(asset.ticker);
-        } else {
+        if (!MOCK_QUOTES[asset.ticker]) {
           yahooTickers.push(asset.ticker);
         }
       });
     });
 
-    const [upstoxQuotesMap, yahooQuotesMap] = await Promise.all([
-      (!upstoxToken || upstoxToken.includes("YOUR_")) ? {} : fetchUpstoxQuotes(upstoxTickers, upstoxToken),
-      fetchYahooQuotes(yahooTickers)
-    ]);
+    const yahooQuotesMap = await fetchYahooQuotes(yahooTickers);
 
     const updatedData = { ...currentData };
     categories.forEach(category => {
       updatedData[category] = currentData[category].map(asset => {
         const ticker = asset.ticker;
-        let quote = upstoxQuotesMap[ticker] || yahooQuotesMap[ticker];
-        
-        // Mock fallback for delisted India GSecs and Global Bonds on Yahoo Finance
-        if (!quote) {
-          const mocks = {
-            'IN2YT=RR': { price: 7.02, changePercent: -0.10 },
-            'IN10YT=RR': { price: 7.15, changePercent: 0.14 },
-            'US2YT=RR': { price: 4.75, changePercent: 0.05 },
-            'JP2YT=RR': { price: 0.25, changePercent: 0.01 },
-            'JP10YT=RR': { price: 1.05, changePercent: 0.02 },
-            'CN2YT=RR': { price: 1.85, changePercent: -0.01 },
-            'CN10YT=RR': { price: 2.25, changePercent: -0.02 }
-          };
-          if (mocks[ticker]) {
-            quote = mocks[ticker];
-          }
-        }
+
+        // Use real Yahoo data or fall back to mock
+        let quote = yahooQuotesMap[ticker] || MOCK_QUOTES[ticker] || null;
 
         if (quote && quote.price != null) {
-          let rawPrice = quote.price;
+          const rawPrice = quote.price;
           const rawChange = quote.changePercent != null ? quote.changePercent : 0;
-          
+
           return {
             ...asset,
             value: rawPrice,
@@ -322,139 +305,57 @@ export const getLatestQuotes = async (currentData, upstoxToken, onExchangeRatesU
             isPositive: rawChange >= 0
           };
         }
-        return asset; // Keep current values if quote missing
+        return asset; // Keep current values if quote is missing
       });
     });
 
     return updatedData;
   } catch (error) {
-    console.warn("Failed fetching live market data:", error);
+    console.warn("Failed fetching EOD market data:", error);
     return currentData;
   }
 };
 
+// ==========================================
+// HISTORY FETCHER — 5 most recent trading days via Yahoo Finance
+// ==========================================
+
 /**
- * Fetches 5-day historical pricing (OHLC) for a specific ticker
+ * Fetches the last 5 trading-day OHLC bars for a ticker via Yahoo Finance.
+ * Falls back to mock data for tickers not covered by Yahoo.
  */
-export const getAssetHistory = async (ticker, upstoxToken, fallbackHistory) => {
+export const getAssetHistory = async (ticker, _unused, fallbackHistory) => {
+  // Return mock history immediately for unsupported tickers
+  if (MOCK_HISTORY[ticker]) {
+    return MOCK_HISTORY[ticker];
+  }
+
   try {
-    const upstoxSymbol = UPSTOX_TICKER_MAP[ticker];
-    
-    // If it's a Yahoo Finance ticker
-    if (!upstoxSymbol) {
-      const response = await axios.get('/api/yfinance/history', {
-        params: { symbol: ticker }
-      });
-      
-      if (response.data && response.data.quotes && response.data.quotes.length > 0) {
-        return response.data.quotes.slice(-5).map((q, idx) => ({
-          day: DAYS[idx] || "Day",
-          value: q.close,
-          open: q.open,
-          high: q.high,
-          low: q.low,
-          close: q.close
-        }));
-      }
-      
-      // MOCK FALLBACK for delisted India GSecs and Global Bonds on Yahoo Finance so UI doesn't break
-      const mockHistoryMap = {
-        "IN2YT=RR": [
-          { day: "Mon", value: 7.05, open: 7.02, high: 7.06, low: 7.01, close: 7.05 },
-          { day: "Tue", value: 7.02, open: 7.05, high: 7.05, low: 6.99, close: 7.02 },
-          { day: "Wed", value: 6.98, open: 7.02, high: 7.03, low: 6.95, close: 6.98 },
-          { day: "Thu", value: 7.01, open: 6.98, high: 7.02, low: 6.98, close: 7.01 },
-          { day: "Fri", value: 7.02, open: 7.01, high: 7.04, low: 7.00, close: 7.02 }
-        ],
-        "IN10YT=RR": [
-          { day: "Mon", value: 7.18, open: 7.15, high: 7.20, low: 7.14, close: 7.18 },
-          { day: "Tue", value: 7.15, open: 7.18, high: 7.19, low: 7.12, close: 7.15 },
-          { day: "Wed", value: 7.10, open: 7.15, high: 7.16, low: 7.08, close: 7.10 },
-          { day: "Thu", value: 7.12, open: 7.10, high: 7.14, low: 7.09, close: 7.12 },
-          { day: "Fri", value: 7.15, open: 7.12, high: 7.17, low: 7.11, close: 7.15 }
-        ],
-        "US2YT=RR": [
-          { day: "Mon", value: 4.70, open: 4.68, high: 4.72, low: 4.65, close: 4.70 },
-          { day: "Tue", value: 4.72, open: 4.70, high: 4.75, low: 4.68, close: 4.72 },
-          { day: "Wed", value: 4.75, open: 4.72, high: 4.78, low: 4.71, close: 4.75 },
-          { day: "Thu", value: 4.73, open: 4.75, high: 4.76, low: 4.70, close: 4.73 },
-          { day: "Fri", value: 4.75, open: 4.73, high: 4.77, low: 4.72, close: 4.75 }
-        ],
-        "JP2YT=RR": [
-          { day: "Mon", value: 0.22, open: 0.20, high: 0.23, low: 0.19, close: 0.22 },
-          { day: "Tue", value: 0.23, open: 0.22, high: 0.25, low: 0.21, close: 0.23 },
-          { day: "Wed", value: 0.24, open: 0.23, high: 0.26, low: 0.22, close: 0.24 },
-          { day: "Thu", value: 0.25, open: 0.24, high: 0.27, low: 0.23, close: 0.25 },
-          { day: "Fri", value: 0.25, open: 0.25, high: 0.26, low: 0.24, close: 0.25 }
-        ],
-        "JP10YT=RR": [
-          { day: "Mon", value: 1.02, open: 1.00, high: 1.04, low: 0.99, close: 1.02 },
-          { day: "Tue", value: 1.03, open: 1.02, high: 1.05, low: 1.01, close: 1.03 },
-          { day: "Wed", value: 1.05, open: 1.03, high: 1.07, low: 1.02, close: 1.05 },
-          { day: "Thu", value: 1.04, open: 1.05, high: 1.06, low: 1.03, close: 1.04 },
-          { day: "Fri", value: 1.05, open: 1.04, high: 1.06, low: 1.03, close: 1.05 }
-        ],
-        "CN2YT=RR": [
-          { day: "Mon", value: 1.88, open: 1.90, high: 1.92, low: 1.85, close: 1.88 },
-          { day: "Tue", value: 1.87, open: 1.88, high: 1.89, low: 1.84, close: 1.87 },
-          { day: "Wed", value: 1.85, open: 1.87, high: 1.88, low: 1.83, close: 1.85 },
-          { day: "Thu", value: 1.86, open: 1.85, high: 1.87, low: 1.84, close: 1.86 },
-          { day: "Fri", value: 1.85, open: 1.86, high: 1.88, low: 1.84, close: 1.85 }
-        ],
-        "CN10YT=RR": [
-          { day: "Mon", value: 2.28, open: 2.30, high: 2.32, low: 2.25, close: 2.28 },
-          { day: "Tue", value: 2.27, open: 2.28, high: 2.29, low: 2.24, close: 2.27 },
-          { day: "Wed", value: 2.25, open: 2.27, high: 2.28, low: 2.23, close: 2.25 },
-          { day: "Thu", value: 2.26, open: 2.25, high: 2.27, low: 2.24, close: 2.26 },
-          { day: "Fri", value: 2.25, open: 2.26, high: 2.28, low: 2.24, close: 2.25 }
-        ]
-      };
-      
-      if (mockHistoryMap[ticker]) {
-        return mockHistoryMap[ticker];
-      }
-
-      return fallbackHistory;
-    }
-
-    // Otherwise, Upstox ticker logic
-    if (!upstoxToken || upstoxToken.trim() === "" || upstoxToken.includes("YOUR_")) {
-      return [];
-    }
-    const today = new Date().toISOString().split("T")[0];
-    const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-
-    const response = await axios.get(
-      `/api/upstox/v2/historical-candle/${encodeURIComponent(upstoxSymbol)}/day/${today}/${tenDaysAgo}`,
-      {
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer ${upstoxToken}`
-        }
-      }
-    );
-
-    const candles = response.data?.data?.candles || [];
-    // Candle format: [timestamp, open, high, low, close, volume, oi]
-    const parsed = candles.slice(0, 5).reverse().map((candle, idx) => {
-      let open = candle[1];
-      let high = candle[2];
-      let low = candle[3];
-      let close = candle[4];
-
-      return {
-        day: DAYS[idx] || "Day",
-        value: close,
-        open: open,
-        high: high,
-        low: low,
-        close: close
-      };
+    const response = await axios.get('/api/yfinance/history', {
+      params: { symbol: ticker }
     });
 
-    return parsed;
+    if (response.data && response.data.quotes && response.data.quotes.length > 0) {
+      // Take the last 5 completed daily candles (most recent = last in array)
+      const candles = response.data.quotes
+        .filter(q => q.close != null) // drop partial/null candles
+        .slice(-5);
+
+      return candles.map((q) => ({
+        // Derive the real weekday name from the candle's date — never hard-code
+        // Mon/Tue/… by index because that breaks across week boundaries.
+        day: getDayLabel(q.date),
+        value: q.close,
+        open: q.open,
+        high: q.high,
+        low: q.low,
+        close: q.close
+      }));
+    }
+
+    return fallbackHistory;
   } catch (error) {
-    console.warn(`Failed fetching chart history for ticker ${ticker}:`, error);
-    return [];
+    console.warn(`Failed fetching chart history for ${ticker}:`, error);
+    return fallbackHistory || [];
   }
 };

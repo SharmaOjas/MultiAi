@@ -7,19 +7,19 @@ export const handler = async (event) => {
     if (!symbols) {
       return { statusCode: 400, body: JSON.stringify({ error: 'symbols required' }) };
     }
-    
+
     const symList = symbols.split(',');
-    
+
     // Fetch each quote individually, ignoring failures
     const results = await Promise.allSettled(
-      symList.map(sym => yahooFinance.quote(sym))
+      symList.map(sym => yahooFinance.quote(sym, {}, { validateResult: false }))
     );
-    
+
     const dataArray = results
       .filter(result => result.status === 'fulfilled' && result.value)
-      .map(result => Array.isArray(result.value) ? result.value[0] : result.value)
+      .map(result => (Array.isArray(result.value) ? result.value[0] : result.value))
       .filter(Boolean);
-      
+
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
