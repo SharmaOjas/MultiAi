@@ -13,57 +13,70 @@ import {
   convertValue,
   formatCurrencyValue,
   parseStringToNumber,
-  fetchDynamicExchangeRates
+  fetchDynamicExchangeRates,
+  generateDynamicCycles
 } from "../Services/marketData";
 import "./App.css";
 
 // Dynamic financial database — starts empty (shows "--" until API provides real data)
-const initialData = {
+const initialDataTemplate = {
   commodity: [
-    { name: "Gold ($)", ticker: "GC=F", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Brent Crude", ticker: "BZ=F", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "WTI Crude", ticker: "CL=F", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Natural Gas", ticker: "NG=F", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Silver", ticker: "SI=F", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Cotton", ticker: "CT=F", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Wheat", ticker: "KE=F", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Steel", ticker: "HRC=F", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Aluminium", ticker: "ALI=F", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Copper", ticker: "HG=F", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Lithium", ticker: "LIT=F", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Zinc", ticker: "ZNC=F", value: "--", changePercent: "--", isPositive: null, history: [] }
+    { name: "Gold ($)", ticker: "GC=F", assetType: "Futures", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Brent Crude", ticker: "BZ=F", assetType: "Futures", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "WTI Crude", ticker: "CL=F", assetType: "Futures", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Natural Gas", ticker: "NG=F", assetType: "Futures", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Silver", ticker: "SI=F", assetType: "Futures", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Cotton", ticker: "CT=F", assetType: "Futures", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Wheat", ticker: "KE=F", assetType: "Futures", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Steel", ticker: "HRC=F", assetType: "Futures", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Aluminium", ticker: "ALI=F", assetType: "Futures", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Copper", ticker: "HG=F", assetType: "Futures", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Lithium", ticker: "LIT=F", assetType: "Futures", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Zinc", ticker: "ZNC=F", assetType: "Futures", value: "--", changePercent: "--", isPositive: null, history: [] }
   ],
   interest_rate: [
-    { name: "India 2Y G-Sec", ticker: "IN2YT=RR", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "India 10Y G-Sec", ticker: "IN10YT=RR", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "US 2Y Treasury", ticker: "US2YT=RR", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "US 10Y Treasury", ticker: "^TNX", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Japan 2Y", ticker: "JP2YT=RR", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Japan 10Y", ticker: "JP10YT=RR", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "China 2Y", ticker: "CN2YT=RR", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "China 10Y", ticker: "CN10YT=RR", value: "--", changePercent: "--", isPositive: null, history: [] }
+    { name: "India 2Y G-Sec", ticker: "IN2YT=RR", assetType: "Yield", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "India 10Y G-Sec", ticker: "IN10YT=RR", assetType: "Yield", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "US 2Y Treasury", ticker: "US2YT=RR", assetType: "Yield", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "US 10Y Treasury", ticker: "^TNX", assetType: "Yield", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Japan 2Y", ticker: "JP2YT=RR", assetType: "Yield", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Japan 10Y", ticker: "JP10YT=RR", assetType: "Yield", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "China 2Y", ticker: "CN2YT=RR", assetType: "Yield", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "China 10Y", ticker: "CN10YT=RR", assetType: "Yield", value: "--", changePercent: "--", isPositive: null, history: [] }
   ],
   equity_index: [
-    { name: "Nifty 50", ticker: "^NSEI", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Bank Nifty", ticker: "^NSEBANK", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Dow Jones", ticker: "^DJI", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "S&P 500", ticker: "^GSPC", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "NASDAQ", ticker: "^IXIC", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Nikkei", ticker: "^N225", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Shanghai", ticker: "000001.SS", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Hang Seng", ticker: "^HSI", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "DAX", ticker: "^GDAXI", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "CAC", ticker: "^FCHI", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "FTSE", ticker: "^FTSE", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Bovespa", ticker: "^BVSP", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "MOEX Russia", ticker: "IMOEX.ME", value: "--", changePercent: "--", isPositive: null, history: [] }
+    { name: "Nifty 50", ticker: "^NSEI", assetType: "Cash Index", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Bank Nifty", ticker: "^NSEBANK", assetType: "Cash Index", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Dow Jones", ticker: "^DJI", assetType: "Cash Index", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "S&P 500", ticker: "^GSPC", assetType: "Cash Index", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "NASDAQ", ticker: "^IXIC", assetType: "Cash Index", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Nikkei", ticker: "^N225", assetType: "Cash Index", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Shanghai", ticker: "000001.SS", assetType: "Cash Index", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Hang Seng", ticker: "^HSI", assetType: "Cash Index", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "DAX", ticker: "^GDAXI", assetType: "Cash Index", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "CAC", ticker: "^FCHI", assetType: "Cash Index", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "FTSE", ticker: "^FTSE", assetType: "Cash Index", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "Bovespa", ticker: "^BVSP", assetType: "Cash Index", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "MOEX Russia", ticker: "IMOEX.ME", assetType: "Cash Index", value: "--", changePercent: "--", isPositive: null, history: [] }
   ],
   forex: [
-    { name: "USD/INR", ticker: "USDINR=X", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "DXY", ticker: "DX-Y.NYB", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "EUR/INR", ticker: "EURINR=X", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "JPY/INR", ticker: "JPYINR=X", value: "--", changePercent: "--", isPositive: null, history: [] }
+    { name: "USD/INR", ticker: "USDINR=X", assetType: "Spot", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "DXY", ticker: "DX-Y.NYB", assetType: "Spot", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "EUR/INR", ticker: "EURINR=X", assetType: "Spot", value: "--", changePercent: "--", isPositive: null, history: [] },
+    { name: "JPY/INR", ticker: "JPYINR=X", assetType: "Spot", value: "--", changePercent: "--", isPositive: null, history: [] }
   ]
+};
+
+// Generate dynamic data payload applying active cyclical futures
+const initialData = {
+  ...initialDataTemplate,
+  commodity: initialDataTemplate.commodity.map(asset => {
+    const cycles = generateDynamicCycles(asset.ticker);
+    if (cycles) {
+      return { ...asset, cycleTickers: cycles };
+    }
+    return asset;
+  })
 };
 
 function App() {
@@ -188,11 +201,30 @@ function App() {
       return result;
     });
 
-    return {
+    const convertedAsset = {
       ...asset,
       value: formattedValue,
       history: convertedHistory
     };
+
+    if (asset.cycleTickers) {
+      convertedAsset.cycleTickers = asset.cycleTickers.map(cycle => {
+        if (cycle.value === "--" || cycle.value === null || cycle.value === undefined) {
+          return cycle;
+        }
+        const rawCycleVal = typeof cycle.value === "number" ? cycle.value : parseStringToNumber(cycle.value);
+        if (isNaN(rawCycleVal) || rawCycleVal === 0) {
+          return cycle;
+        }
+        const convertedCycleVal = convertValue(rawCycleVal, fromCurrency, toCurrency, exchangeRates);
+        return {
+          ...cycle,
+          value: formatCurrencyValue(convertedCycleVal, toCurrency)
+        };
+      });
+    }
+
+    return convertedAsset;
   };
 
   // Build converted derived lists

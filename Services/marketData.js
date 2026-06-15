@@ -157,6 +157,65 @@ const MOCK_QUOTES = {
   'CN10YT=RR': { price: 2.25, changePercent: -0.02 }
 };
 
+// ==========================================
+// DYNAMIC CYCLES GENERATOR
+// ==========================================
+const EXCHANGE_SUFFIX_MAP = {
+  "GC": ".CMX",
+  "BZ": ".NYM",
+  "CL": ".NYM",
+  "NG": ".NYM",
+  "SI": ".CMX",
+  "HRC": ".CMX",
+  "ALI": ".CMX",
+  "HG": ".CMX",
+  "LIT": ".CME",
+  "ZNC": ".CMX"
+};
+
+const FUTURES_MONTH_CODES = ['F','G','H','J','K','M','N','Q','U','V','X','Z'];
+const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+/**
+ * Automatically calculates the next 2 expiration cycle futures based on the current date.
+ * (Assumes offset +2 and +3 months to safely capture active forward months)
+ */
+export const generateDynamicCycles = (ticker) => {
+  const prefix = ticker.split('=')[0];
+  const suffix = EXCHANGE_SUFFIX_MAP[prefix];
+  if (!suffix) return null; // Not a supported cyclical commodity
+
+  const d = new Date();
+  const m = d.getMonth();
+  const y = d.getFullYear() % 100;
+
+  const cycles = [];
+  [2, 3].forEach(offset => {
+    const targetM = (m + offset) % 12;
+    const targetY = y + Math.floor((m + offset) / 12);
+    
+    cycles.push({
+      label: `${SHORT_MONTHS[targetM]} '${targetY}`,
+      ticker: `${prefix}${FUTURES_MONTH_CODES[targetM]}${targetY}${suffix}`,
+      value: "--",
+      changePercent: "--",
+      isPositive: null
+    });
+  });
+
+  return cycles;
+};
+
+// Dynamic Mock Fallback logic for unsupported/inactive futures
+const getFallbackQuote = (ticker) => {
+  if (MOCK_QUOTES[ticker]) return MOCK_QUOTES[ticker];
+  if (ticker.startsWith("LIT")) return { price: 99.10, changePercent: 0.15 };
+  if (ticker.startsWith("ZNC")) return { price: 2540.0, changePercent: 0.35 };
+  if (ticker.startsWith("BZ") && ticker.length > 4) return { price: 82.50, changePercent: 0.20 };
+  if (ticker.startsWith("CL") && ticker.length > 4) return { price: 79.20, changePercent: 0.18 };
+  return null;
+};
+
 const MOCK_HISTORY = {
   "IN2YT=RR": [
     { day: "Mon", value: 7.05, open: 7.02, high: 7.06, low: 7.01, close: 7.05 },
@@ -278,8 +337,15 @@ export const getLatestQuotes = async (currentData, _unused, onExchangeRatesUpdat
     const yahooTickers = [];
     categories.forEach(category => {
       currentData[category].forEach(asset => {
-        if (!MOCK_QUOTES[asset.ticker]) {
+        if (!getFallbackQuote(asset.ticker)) {
           yahooTickers.push(asset.ticker);
+        }
+        if (asset.cycleTickers) {
+          asset.cycleTickers.forEach(cycle => {
+            if (!getFallbackQuote(cycle.ticker)) {
+              yahooTickers.push(cycle.ticker);
+            }
+          });
         }
       });
     });
@@ -292,20 +358,43 @@ export const getLatestQuotes = async (currentData, _unused, onExchangeRatesUpdat
         const ticker = asset.ticker;
 
         // Use real Yahoo data or fall back to mock
-        let quote = yahooQuotesMap[ticker] || MOCK_QUOTES[ticker] || null;
+        let quote = yahooQuotesMap[ticker] || getFallbackQuote(ticker) || null;
+        let mainUpdates = {};
 
         if (quote && quote.price != null) {
           const rawPrice = quote.price;
           const rawChange = quote.changePercent != null ? quote.changePercent : 0;
 
-          return {
-            ...asset,
+          mainUpdates = {
             value: rawPrice,
             changePercent: `${rawChange >= 0 ? "+" : ""}${rawChange.toFixed(2)}%`,
             isPositive: rawChange >= 0
           };
         }
-        return asset; // Keep current values if quote is missing
+
+        let updatedCycleTickers = asset.cycleTickers;
+        if (asset.cycleTickers) {
+          updatedCycleTickers = asset.cycleTickers.map(cycle => {
+            let cycleQuote = yahooQuotesMap[cycle.ticker] || getFallbackQuote(cycle.ticker) || null;
+            if (cycleQuote && cycleQuote.price != null) {
+              const rawPrice = cycleQuote.price;
+              const rawChange = cycleQuote.changePercent != null ? cycleQuote.changePercent : 0;
+              return {
+                ...cycle,
+                value: rawPrice,
+                changePercent: `${rawChange >= 0 ? "+" : ""}${rawChange.toFixed(2)}%`,
+                isPositive: rawChange >= 0
+              };
+            }
+            return cycle;
+          });
+        }
+
+        return {
+          ...asset,
+          ...mainUpdates,
+          ...(asset.cycleTickers ? { cycleTickers: updatedCycleTickers } : {})
+        };
       });
     });
 

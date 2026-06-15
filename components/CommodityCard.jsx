@@ -130,7 +130,24 @@ function CommodityCard({ assets, selectedAsset, onSelectAsset }) {
           <div className="details-header-row">
             <div className="active-asset-info">
               <span className="details-asset-title">{selectedAsset.name}</span>
-              <span className="card-active-ticker">{selectedAsset.ticker}</span>
+              <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                <span className="card-active-ticker">{selectedAsset.ticker}</span>
+                {selectedAsset.assetType && (
+                  <span style={{ 
+                    fontSize: "9px", 
+                    padding: "2px 6px", 
+                    borderRadius: "4px", 
+                    backgroundColor: "rgba(255, 255, 255, 0.05)", 
+                    border: "1px solid rgba(255, 255, 255, 0.1)", 
+                    color: "var(--text-muted)",
+                    fontFamily: "var(--mono)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px"
+                  }}>
+                    {selectedAsset.assetType}
+                  </span>
+                )}
+              </div>
             </div>
             <div className="active-asset-pricing">
               <span className="details-price-value">{selectedAsset.value}</span>
@@ -139,6 +156,19 @@ function CommodityCard({ assets, selectedAsset, onSelectAsset }) {
               </span>
             </div>
           </div>
+          
+          {/* Cycle Tickers Display */}
+          {selectedAsset.cycleTickers && (
+            <div style={{ display: "flex", gap: "16px", marginTop: "4px", marginBottom: "12px", padding: "6px 10px", backgroundColor: "rgba(255, 255, 255, 0.02)", borderRadius: "4px", border: "1px solid rgba(255, 255, 255, 0.05)" }}>
+              {selectedAsset.cycleTickers.map((cycle, i) => (
+                <div key={i} style={{ display: "flex", gap: "6px", alignItems: "center", fontSize: "11px", fontFamily: "var(--mono)" }}>
+                  <span style={{ color: "var(--text-muted)" }}>{cycle.label}:</span>
+                  <span style={{ color: "var(--text-primary)", fontWeight: "bold" }}>{cycle.value}</span>
+                  <span style={{ color: cycle.isPositive ? "#10b981" : "#ef4444" }}>{cycle.changePercent}</span>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Chart Container */}
           <div className="card-chart-container">

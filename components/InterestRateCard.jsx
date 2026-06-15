@@ -130,7 +130,24 @@ function InterestRateCard({ assets, selectedAsset, onSelectAsset }) {
           <div className="details-header-row">
             <div className="active-asset-info">
               <span className="details-asset-title">{selectedAsset.name}</span>
-              <span className="card-active-ticker">{selectedAsset.ticker}</span>
+              <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                <span className="card-active-ticker">{selectedAsset.ticker}</span>
+                {selectedAsset.assetType && (
+                  <span style={{ 
+                    fontSize: "9px", 
+                    padding: "2px 6px", 
+                    borderRadius: "4px", 
+                    backgroundColor: "rgba(255, 255, 255, 0.05)", 
+                    border: "1px solid rgba(255, 255, 255, 0.1)", 
+                    color: "var(--text-muted)",
+                    fontFamily: "var(--mono)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px"
+                  }}>
+                    {selectedAsset.assetType}
+                  </span>
+                )}
+              </div>
             </div>
             <div className="active-asset-pricing">
               <span className="details-price-value">{selectedAsset.value}</span>
