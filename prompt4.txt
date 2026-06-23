@@ -1,0 +1,11 @@
+Common Start (prepend to every prompt):  
+Analyze the provided annual report. Extract only information explicitly disclosed in the report.  
+  
+1. Related Party Transactions  
+- Major transactions with promoters or subsidiaries  
+- Key management personnel remuneration  
+  
+2. Contingent Liabilities  
+- Claims against the company not acknowledged as debts  
+- Guarantees provided  
+- Tax disputes 

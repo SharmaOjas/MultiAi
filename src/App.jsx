@@ -14,69 +14,374 @@ import {
   formatCurrencyValue,
   parseStringToNumber,
   fetchDynamicExchangeRates,
-  generateDynamicCycles
+  generateDynamicCycles,
 } from "../Services/marketData";
+import {
+  fetchGeminiAnalysis,
+  fetchGroqAnalysis,
+  extractPdfText,
+} from "../Services/aiService";
+import promptTemplate1 from "../promt1.txt?raw";
+import promptTemplate2 from "../prompt2.txt?raw";
+import promptTemplate3 from "../prompt3.txt?raw";
+import promptTemplate4 from "../prompt4.txt?raw";
 import "./App.css";
 
 // Dynamic financial database — starts empty (shows "--" until API provides real data)
 const initialDataTemplate = {
   commodity: [
-    { name: "Gold ($)", ticker: "GC=F", assetType: "Futures", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Brent Crude", ticker: "BZ=F", assetType: "Futures", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "WTI Crude", ticker: "CL=F", assetType: "Futures", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Natural Gas", ticker: "NG=F", assetType: "Futures", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Silver", ticker: "SI=F", assetType: "Futures", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Cotton", ticker: "CT=F", assetType: "Futures", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Wheat", ticker: "KE=F", assetType: "Futures", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Steel", ticker: "HRC=F", assetType: "Futures", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Aluminium", ticker: "ALI=F", assetType: "Futures", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Copper", ticker: "HG=F", assetType: "Futures", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Lithium", ticker: "LIT=F", assetType: "Futures", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Zinc", ticker: "ZNC=F", assetType: "Futures", value: "--", changePercent: "--", isPositive: null, history: [] }
+    {
+      name: "Gold ($)",
+      ticker: "GC=F",
+      assetType: "Futures",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "Brent Crude",
+      ticker: "BZ=F",
+      assetType: "Futures",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "WTI Crude",
+      ticker: "CL=F",
+      assetType: "Futures",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "Natural Gas",
+      ticker: "NG=F",
+      assetType: "Futures",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "Silver",
+      ticker: "SI=F",
+      assetType: "Futures",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "Cotton",
+      ticker: "CT=F",
+      assetType: "Futures",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "Wheat",
+      ticker: "KE=F",
+      assetType: "Futures",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "Steel",
+      ticker: "HRC=F",
+      assetType: "Futures",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "Aluminium",
+      ticker: "ALI=F",
+      assetType: "Futures",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "Copper",
+      ticker: "HG=F",
+      assetType: "Futures",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "Lithium",
+      ticker: "LIT=F",
+      assetType: "Futures",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "Zinc",
+      ticker: "ZNC=F",
+      assetType: "Futures",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
   ],
   interest_rate: [
-    { name: "India 2Y G-Sec", ticker: "IN2YT=RR", assetType: "Yield", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "India 10Y G-Sec", ticker: "IN10YT=RR", assetType: "Yield", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "US 2Y Treasury", ticker: "US2YT=RR", assetType: "Yield", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "US 10Y Treasury", ticker: "^TNX", assetType: "Yield", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Japan 2Y", ticker: "JP2YT=RR", assetType: "Yield", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Japan 10Y", ticker: "JP10YT=RR", assetType: "Yield", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "China 2Y", ticker: "CN2YT=RR", assetType: "Yield", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "China 10Y", ticker: "CN10YT=RR", assetType: "Yield", value: "--", changePercent: "--", isPositive: null, history: [] }
+    {
+      name: "India 2Y G-Sec",
+      ticker: "IN2YT=RR",
+      assetType: "Yield",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "India 10Y G-Sec",
+      ticker: "IN10YT=RR",
+      assetType: "Yield",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "US 2Y Treasury",
+      ticker: "US2YT=RR",
+      assetType: "Yield",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "US 10Y Treasury",
+      ticker: "^TNX",
+      assetType: "Yield",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "Japan 2Y",
+      ticker: "JP2YT=RR",
+      assetType: "Yield",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "Japan 10Y",
+      ticker: "JP10YT=RR",
+      assetType: "Yield",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "China 2Y",
+      ticker: "CN2YT=RR",
+      assetType: "Yield",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "China 10Y",
+      ticker: "CN10YT=RR",
+      assetType: "Yield",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
   ],
   equity_index: [
-    { name: "Nifty 50", ticker: "^NSEI", assetType: "Cash Index", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Bank Nifty", ticker: "^NSEBANK", assetType: "Cash Index", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Dow Jones", ticker: "^DJI", assetType: "Cash Index", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "S&P 500", ticker: "^GSPC", assetType: "Cash Index", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "NASDAQ", ticker: "^IXIC", assetType: "Cash Index", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Nikkei", ticker: "^N225", assetType: "Cash Index", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Shanghai", ticker: "000001.SS", assetType: "Cash Index", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Hang Seng", ticker: "^HSI", assetType: "Cash Index", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "DAX", ticker: "^GDAXI", assetType: "Cash Index", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "CAC", ticker: "^FCHI", assetType: "Cash Index", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "FTSE", ticker: "^FTSE", assetType: "Cash Index", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "Bovespa", ticker: "^BVSP", assetType: "Cash Index", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "MOEX Russia", ticker: "IMOEX.ME", assetType: "Cash Index", value: "--", changePercent: "--", isPositive: null, history: [] }
+    {
+      name: "Nifty 50",
+      ticker: "^NSEI",
+      assetType: "Cash Index",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "Bank Nifty",
+      ticker: "^NSEBANK",
+      assetType: "Cash Index",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "Dow Jones",
+      ticker: "^DJI",
+      assetType: "Cash Index",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "S&P 500",
+      ticker: "^GSPC",
+      assetType: "Cash Index",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "NASDAQ",
+      ticker: "^IXIC",
+      assetType: "Cash Index",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "Nikkei",
+      ticker: "^N225",
+      assetType: "Cash Index",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "Shanghai",
+      ticker: "000001.SS",
+      assetType: "Cash Index",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "Hang Seng",
+      ticker: "^HSI",
+      assetType: "Cash Index",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "DAX",
+      ticker: "^GDAXI",
+      assetType: "Cash Index",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "CAC",
+      ticker: "^FCHI",
+      assetType: "Cash Index",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "FTSE",
+      ticker: "^FTSE",
+      assetType: "Cash Index",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "Bovespa",
+      ticker: "^BVSP",
+      assetType: "Cash Index",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "MOEX Russia",
+      ticker: "IMOEX.ME",
+      assetType: "Cash Index",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
   ],
   forex: [
-    { name: "USD/INR", ticker: "USDINR=X", assetType: "Spot", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "DXY", ticker: "DX-Y.NYB", assetType: "Spot", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "EUR/INR", ticker: "EURINR=X", assetType: "Spot", value: "--", changePercent: "--", isPositive: null, history: [] },
-    { name: "JPY/INR", ticker: "JPYINR=X", assetType: "Spot", value: "--", changePercent: "--", isPositive: null, history: [] }
-  ]
+    {
+      name: "USD/INR",
+      ticker: "USDINR=X",
+      assetType: "Spot",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "DXY",
+      ticker: "DX-Y.NYB",
+      assetType: "Spot",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "EUR/INR",
+      ticker: "EURINR=X",
+      assetType: "Spot",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+    {
+      name: "JPY/INR",
+      ticker: "JPYINR=X",
+      assetType: "Spot",
+      value: "--",
+      changePercent: "--",
+      isPositive: null,
+      history: [],
+    },
+  ],
 };
 
 // Generate dynamic data payload applying active cyclical futures
 const initialData = {
   ...initialDataTemplate,
-  commodity: initialDataTemplate.commodity.map(asset => {
+  commodity: initialDataTemplate.commodity.map((asset) => {
     const cycles = generateDynamicCycles(asset.ticker);
     if (cycles) {
       return { ...asset, cycleTickers: cycles };
     }
     return asset;
-  })
+  }),
 };
 
 function App() {
@@ -85,16 +390,25 @@ function App() {
   const [exchangeRates, setExchangeRates] = useState(BASE_INR_EXCHANGE_RATES);
 
   // Local card-specific selection state managed as tickers
-  const [selectedCommodityTicker, setSelectedCommodityTicker] = useState(initialData.commodity[0].ticker);
-  const [selectedInterestRateTicker, setSelectedInterestRateTicker] = useState("^TNX");
-  const [selectedEquityTicker, setSelectedEquityTicker] = useState(initialData.equity_index[0].ticker);
-  const [selectedForexTicker, setSelectedForexTicker] = useState(initialData.forex[0].ticker);
+  const [selectedCommodityTicker, setSelectedCommodityTicker] = useState(
+    initialData.commodity[0].ticker,
+  );
+  const [selectedInterestRateTicker, setSelectedInterestRateTicker] =
+    useState("^TNX");
+  const [selectedEquityTicker, setSelectedEquityTicker] = useState(
+    initialData.equity_index[0].ticker,
+  );
+  const [selectedForexTicker, setSelectedForexTicker] = useState(
+    initialData.forex[0].ticker,
+  );
 
   // Control panel inputs & output panel state
-  const [searchQuery, setSearchQuery] = useState("");
   const [activeMode, setActiveMode] = useState(1);
   const [isPromptRunning, setIsPromptRunning] = useState(false);
-  const [promptOutput, setPromptOutput] = useState("");
+  const [promptOutput, setPromptOutput] = useState({ gemini: "", groq: "" });
+  const [selectedModel, setSelectedModel] = useState("Both");
+  const [selectedPdfs, setSelectedPdfs] = useState([]); // Array of PDF files
+  const [extractionStatus, setExtractionStatus] = useState("");
 
   const marketDataRef = useRef(marketData);
   useEffect(() => {
@@ -129,18 +443,18 @@ function App() {
 
     const fetchHistoryForTicker = async (ticker, category) => {
       const list = marketDataRef.current[category];
-      const asset = list.find(a => a.ticker === ticker);
+      const asset = list.find((a) => a.ticker === ticker);
       if (!asset || asset.hasRealHistory) return;
 
       const realHistory = await getAssetHistory(ticker, null, asset.history);
       if (isMounted) {
-        setMarketData(prev => ({
+        setMarketData((prev) => ({
           ...prev,
-          [category]: prev[category].map(a =>
+          [category]: prev[category].map((a) =>
             a.ticker === ticker
               ? { ...a, history: realHistory, hasRealHistory: true }
-              : a
-          )
+              : a,
+          ),
         }));
       }
     };
@@ -153,49 +467,94 @@ function App() {
     return () => {
       isMounted = false;
     };
-  }, [selectedCommodityTicker, selectedInterestRateTicker, selectedEquityTicker, selectedForexTicker]);
+  }, [
+    selectedCommodityTicker,
+    selectedInterestRateTicker,
+    selectedEquityTicker,
+    selectedForexTicker,
+  ]);
 
   // Dynamic currency conversion helper
   const convertAsset = (asset, category) => {
     if (category === "interest_rate" || category === "forex") {
       return asset;
     }
-    
+
     // If value is placeholder "--", skip conversion entirely
-    if (asset.value === "--" || asset.value === null || asset.value === undefined) {
+    if (
+      asset.value === "--" ||
+      asset.value === null ||
+      asset.value === undefined
+    ) {
       return asset;
     }
-    
+
     const fromCurrency = ASSET_CURRENCIES[asset.ticker] || "USD";
-    const toCurrency = asset.ticker === "GC=F" ? "USD" : (targetCurrency === "Local" ? fromCurrency : targetCurrency);
-    
-    const rawValue = typeof asset.value === "number" 
-      ? asset.value 
-      : parseStringToNumber(asset.value);
-    
+    const toCurrency =
+      asset.ticker === "GC=F"
+        ? "USD"
+        : targetCurrency === "Local"
+          ? fromCurrency
+          : targetCurrency;
+
+    const rawValue =
+      typeof asset.value === "number"
+        ? asset.value
+        : parseStringToNumber(asset.value);
+
     if (isNaN(rawValue) || rawValue === 0) {
       return asset;
     }
-    
-    const convertedValue = convertValue(rawValue, fromCurrency, toCurrency, exchangeRates);
+
+    const convertedValue = convertValue(
+      rawValue,
+      fromCurrency,
+      toCurrency,
+      exchangeRates,
+    );
     const formattedValue = formatCurrencyValue(convertedValue, toCurrency);
 
     // Convert chart data
-    const convertedHistory = (asset.history || []).map(item => {
+    const convertedHistory = (asset.history || []).map((item) => {
       const rawHistVal = parseStringToNumber(item.value);
       if (isNaN(rawHistVal) || rawHistVal === 0) return item;
-      const convertedHistVal = convertValue(rawHistVal, fromCurrency, toCurrency, exchangeRates);
-      
+      const convertedHistVal = convertValue(
+        rawHistVal,
+        fromCurrency,
+        toCurrency,
+        exchangeRates,
+      );
+
       const result = {
         ...item,
-        value: convertedHistVal
+        value: convertedHistVal,
       };
 
       if (item.open !== undefined) {
-        result.open = convertValue(parseStringToNumber(item.open), fromCurrency, toCurrency, exchangeRates);
-        result.high = convertValue(parseStringToNumber(item.high), fromCurrency, toCurrency, exchangeRates);
-        result.low = convertValue(parseStringToNumber(item.low), fromCurrency, toCurrency, exchangeRates);
-        result.close = convertValue(parseStringToNumber(item.close), fromCurrency, toCurrency, exchangeRates);
+        result.open = convertValue(
+          parseStringToNumber(item.open),
+          fromCurrency,
+          toCurrency,
+          exchangeRates,
+        );
+        result.high = convertValue(
+          parseStringToNumber(item.high),
+          fromCurrency,
+          toCurrency,
+          exchangeRates,
+        );
+        result.low = convertValue(
+          parseStringToNumber(item.low),
+          fromCurrency,
+          toCurrency,
+          exchangeRates,
+        );
+        result.close = convertValue(
+          parseStringToNumber(item.close),
+          fromCurrency,
+          toCurrency,
+          exchangeRates,
+        );
       }
 
       return result;
@@ -204,22 +563,34 @@ function App() {
     const convertedAsset = {
       ...asset,
       value: formattedValue,
-      history: convertedHistory
+      history: convertedHistory,
     };
 
     if (asset.cycleTickers) {
-      convertedAsset.cycleTickers = asset.cycleTickers.map(cycle => {
-        if (cycle.value === "--" || cycle.value === null || cycle.value === undefined) {
+      convertedAsset.cycleTickers = asset.cycleTickers.map((cycle) => {
+        if (
+          cycle.value === "--" ||
+          cycle.value === null ||
+          cycle.value === undefined
+        ) {
           return cycle;
         }
-        const rawCycleVal = typeof cycle.value === "number" ? cycle.value : parseStringToNumber(cycle.value);
+        const rawCycleVal =
+          typeof cycle.value === "number"
+            ? cycle.value
+            : parseStringToNumber(cycle.value);
         if (isNaN(rawCycleVal) || rawCycleVal === 0) {
           return cycle;
         }
-        const convertedCycleVal = convertValue(rawCycleVal, fromCurrency, toCurrency, exchangeRates);
+        const convertedCycleVal = convertValue(
+          rawCycleVal,
+          fromCurrency,
+          toCurrency,
+          exchangeRates,
+        );
         return {
           ...cycle,
-          value: formatCurrencyValue(convertedCycleVal, toCurrency)
+          value: formatCurrencyValue(convertedCycleVal, toCurrency),
         };
       });
     }
@@ -229,69 +600,188 @@ function App() {
 
   // Build converted derived lists
   const convertedData = {
-    commodity: marketData.commodity.map(a => convertAsset(a, "commodity")),
-    interest_rate: marketData.interest_rate.map(a => convertAsset(a, "interest_rate")),
-    equity_index: marketData.equity_index.map(a => convertAsset(a, "equity_index")),
-    forex: marketData.forex.map(a => convertAsset(a, "forex"))
+    commodity: marketData.commodity.map((a) => convertAsset(a, "commodity")),
+    interest_rate: marketData.interest_rate.map((a) =>
+      convertAsset(a, "interest_rate"),
+    ),
+    equity_index: marketData.equity_index.map((a) =>
+      convertAsset(a, "equity_index"),
+    ),
+    forex: marketData.forex.map((a) => convertAsset(a, "forex")),
   };
 
   // Select corresponding active converted assets
-  const selectedCommodity = convertedData.commodity.find(a => a.ticker === selectedCommodityTicker) || convertedData.commodity[0];
-  const selectedInterestRate = convertedData.interest_rate.find(a => a.ticker === selectedInterestRateTicker) || convertedData.interest_rate[0];
-  const selectedEquity = convertedData.equity_index.find(a => a.ticker === selectedEquityTicker) || convertedData.equity_index[0];
-  const selectedForex = convertedData.forex.find(a => a.ticker === selectedForexTicker) || convertedData.forex[0];
+  const selectedCommodity =
+    convertedData.commodity.find((a) => a.ticker === selectedCommodityTicker) ||
+    convertedData.commodity[0];
+  const selectedInterestRate =
+    convertedData.interest_rate.find(
+      (a) => a.ticker === selectedInterestRateTicker,
+    ) || convertedData.interest_rate[0];
+  const selectedEquity =
+    convertedData.equity_index.find((a) => a.ticker === selectedEquityTicker) ||
+    convertedData.equity_index[0];
+  const selectedForex =
+    convertedData.forex.find((a) => a.ticker === selectedForexTicker) ||
+    convertedData.forex[0];
 
-  const handleRunPrompt = () => {
+  const handleRunPrompt = async () => {
     setIsPromptRunning(true);
-    setPromptOutput("");
+    setExtractionStatus("");
+    setPromptOutput({ gemini: "", groq: "" });
 
-    let targetAsset = "";
-    let targetDetails = "";
-    const companyText = searchQuery.trim() ? `referencing key entity "${searchQuery.trim()}"` : "under current corporate holdings";
-
-    switch (activeMode) {
-      case 1:
-        targetAsset = `${selectedCommodity.name} (${selectedCommodity.ticker})`;
-        targetDetails = `Commodity market fluctuations show a strong consolidation cycle for ${targetAsset}. ${companyText ? `Analyzing ${companyText}, resource cost bases and supply chain hedging indicate medium sensitivity to spot variations. ` : ""}Historically, current valuation metrics of ${selectedCommodity.value} (${selectedCommodity.changePercent}) remain within standard weekly boundaries with technical support established.`;
-        break;
-      case 2:
-        targetAsset = `${selectedInterestRate.name} (${selectedInterestRate.ticker})`;
-        targetDetails = `Yield curves for ${targetAsset} are flattening following recent central bank announcements. Corporate capital expenditures ${searchQuery.trim() ? `for "${searchQuery.trim()}"` : ""} are highly leveraged to these long-duration debt cost adjustments. The current yield of ${selectedInterestRate.value} (${selectedInterestRate.changePercent}) indicates tight credit conditions in local regions.`;
-        break;
-      case 3:
-        targetAsset = `${selectedEquity.name} (${selectedEquity.ticker})`;
-        targetDetails = `The ${targetAsset} equity index has exhibited a major sector rotation. Mega-cap performance profiles ${searchQuery.trim() ? `associated with "${searchQuery.trim()}" correlation lists` : ""} outline strong support levels near moving averages. Current index pricing sits at ${selectedEquity.value} (${selectedEquity.changePercent}), showing positive technical momentum for momentum traders.`;
-        break;
-      case 4:
-        targetAsset = `${selectedForex.name} (${selectedForex.ticker})`;
-        targetDetails = `Currency exchange valuation for ${targetAsset} remains range-bound. Foreign exchange exposures ${searchQuery.trim() ? `for corporate importer "${searchQuery.trim()}"` : ""} present short-term hedging opportunities at spot rates. The currency index rate stands at ${selectedForex.value} (${selectedForex.changePercent}) with a baseline established.`;
-        break;
-      default:
-        targetDetails = "Macro-economic indicators are stable. Ready to synthesize next trigger request.";
+    // ── Step 1: Acquire report content (PDF base64) ─────────────────────────
+    if (!selectedPdfs || selectedPdfs.length === 0) {
+      setPromptOutput({
+        gemini: `⚠️ **Report Acquisition Failed**\n\nPlease attach at least one PDF report to analyze.`,
+        groq: `⚠️ **Report Acquisition Failed**\n\nPlease attach at least one PDF report to analyze.`,
+      });
+      setIsPromptRunning(false);
+      return;
     }
 
-    setTimeout(() => {
+    const fileBase64s = [];
+    try {
+      // Manual PDF upload(s) — read as base64
+      for (const pdf of selectedPdfs) {
+        const b64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result.split(",")[1]);
+          reader.onerror = (error) => reject(error);
+          reader.readAsDataURL(pdf);
+        });
+        fileBase64s.push(b64);
+      }
+    } catch (err) {
+      console.error("Report acquisition error:", err);
+      setPromptOutput({
+        gemini: `⚠️ **Report Acquisition Failed**\n\n${err.message}`,
+        groq: `⚠️ **Report Acquisition Failed**\n\n${err.message}`,
+      });
       setIsPromptRunning(false);
-      setPromptOutput(
-        `AI MACRO SCALE ANALYTICS REPORT\n================================\nMode: Mode ${activeMode} - ${getModeName(activeMode)}\nAsset Reference: ${targetAsset}\nValuation: ${getActiveAssetValuation(activeMode)}\n\nEXECUTIVE INSIGHT:\n${targetDetails}\n\nTECHNICAL OUTLOOK:\nVolume profile indicators indicate institutional accumulation. Hedging recommendations suggest maintaining standard long ratios in low-beta assets.`
-      );
-    }, 1200);
-  };
+      return;
+    }
 
-  const getModeName = (mode) => {
-    if (mode === 1) return "Commodity Analysis";
-    if (mode === 2) return "Interest Rate Analysis";
-    if (mode === 3) return "Equity Analysis";
-    if (mode === 4) return "Forex Analysis";
-    return "";
-  };
+    // ── Step 2: Build the clean prompt (no boilerplate market text) ──────────
+    const reportSource = `Manual upload: ${selectedPdfs.map((p) => `"${p.name}"`).join(", ")}`;
 
-  const getActiveAssetValuation = (mode) => {
-    if (mode === 1) return `${selectedCommodity.value} (${selectedCommodity.changePercent})`;
-    if (mode === 2) return `${selectedInterestRate.value} (${selectedInterestRate.changePercent})`;
-    if (mode === 3) return `${selectedEquity.value} (${selectedEquity.changePercent})`;
-    if (mode === 4) return `${selectedForex.value} (${selectedForex.changePercent})`;
-    return "";
+    let activePromptTemplate;
+    switch (activeMode) {
+      case 1:
+        activePromptTemplate = promptTemplate1;
+        break;
+      case 2:
+        activePromptTemplate = promptTemplate2;
+        break;
+      case 3:
+        activePromptTemplate = promptTemplate3;
+        break;
+      case 4:
+        activePromptTemplate = promptTemplate4;
+        break;
+      default:
+        activePromptTemplate = promptTemplate1;
+    }
+
+    const geminiPrompt = `System Instructions:
+${activePromptTemplate}
+
+Report Source: ${reportSource}
+
+Analyze the documents provided above according to the instructions in the System Instructions. Extract only information explicitly disclosed in the reports. Quote relevant figures, dates, percentages, and page numbers wherever available.`;
+
+    // ── Step 3: Extract PDF text for Groq (text-only model) ─────────────────
+    let extractedReportText = "";
+    const needsGroq =
+      selectedModel === "Both" ||
+      selectedModel === "BothSummarized" ||
+      selectedModel === "Groq";
+
+    if (needsGroq && fileBase64s.length > 0) {
+      setExtractionStatus("Extracting PDF text for Groq (Llama 3.3)...");
+      try {
+        // Extract text from all uploaded PDFs
+        const extractPromises = fileBase64s.map((b64) => extractPdfText(b64));
+        const texts = await Promise.all(extractPromises);
+        extractedReportText = texts.join("\n\n=== NEXT DOCUMENT ===\n\n");
+      } catch (extractErr) {
+        console.error("PDF text extraction error:", extractErr);
+        extractedReportText = `[PDF text extraction failed: ${extractErr.message}]`;
+      }
+      setExtractionStatus("");
+    }
+
+    const groqPrompt = `System Instructions:
+${activePromptTemplate}
+
+Report Source: ${reportSource}
+
+${
+  extractedReportText
+    ? `--- REPORTS CONTENT START ---\n${extractedReportText}\n--- REPORTS CONTENT END ---\n\n`
+    : ""
+}
+Analyze the documents content provided above according to the instructions in the System Instructions. Extract only information explicitly disclosed in the reports. Quote relevant figures, dates, percentages, and page numbers wherever available.`;
+
+    // ── Step 4: Call AI models ───────────────────────────────────────────────
+    try {
+      let geminiRes = "";
+      let groqRes = "";
+
+      const fetchTasks = [];
+
+      if (
+        selectedModel === "Both" ||
+        selectedModel === "BothSummarized" ||
+        selectedModel === "Gemini"
+      ) {
+        fetchTasks.push(
+          fetchGeminiAnalysis(geminiPrompt, fileBase64s).then((res) => {
+            geminiRes = res;
+          }),
+        );
+      }
+
+      if (needsGroq) {
+        fetchTasks.push(
+          fetchGroqAnalysis(groqPrompt).then((res) => {
+            groqRes = res;
+          }),
+        );
+      }
+
+      await Promise.all(fetchTasks);
+
+      if (selectedModel === "BothSummarized") {
+        setPromptOutput({
+          gemini: "",
+          groq: "Synthesizing a unified report from Groq and Gemini...",
+        });
+        const summaryPrompt = `You are a senior financial analyst. Synthesize the following two independent analyses of the same company's annual report into a single comprehensive, cohesive report. Resolve any contradictions by preferring the more specific/data-backed claim. Retain all specific figures, percentages, and page references. Use the table structure from the original instructions where applicable.
+
+### Groq (Llama 3.3) Analysis
+${groqRes}
+
+### Gemini Analysis
+${geminiRes}
+
+### Unified Report:`;
+
+        const summaryRes = await fetchGeminiAnalysis(summaryPrompt);
+        setPromptOutput({ gemini: summaryRes, groq: "" });
+      } else {
+        setPromptOutput({ gemini: geminiRes, groq: groqRes });
+      }
+    } catch (error) {
+      console.error(error);
+      setPromptOutput({
+        gemini: `Error fetching analysis: ${error.message}`,
+        groq: `Error fetching analysis: ${error.message}`,
+      });
+    } finally {
+      setIsPromptRunning(false);
+      setExtractionStatus("");
+    }
   };
 
   return (
@@ -302,17 +792,23 @@ function App() {
           <div className="header-brand-logo">M</div>
           <h1 className="header-brand-name">MacroScale</h1>
         </div>
-        
-        <div className="header-meta-group" style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+
+        <div
+          className="header-meta-group"
+          style={{ display: "flex", alignItems: "center", gap: "14px" }}
+        >
           {/* Currency Selection Dropdown */}
-          <div className="currency-selector-wrapper" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <label 
-              htmlFor="currency-select" 
-              style={{ 
-                fontSize: "11px", 
-                color: "var(--text-secondary)", 
-                fontFamily: "var(--mono)", 
-                fontWeight: "bold" 
+          <div
+            className="currency-selector-wrapper"
+            style={{ display: "flex", alignItems: "center", gap: "8px" }}
+          >
+            <label
+              htmlFor="currency-select"
+              style={{
+                fontSize: "11px",
+                color: "var(--text-secondary)",
+                fontFamily: "var(--mono)",
+                fontWeight: "bold",
               }}
             >
               CURRENCY:
@@ -330,7 +826,7 @@ function App() {
                 fontSize: "11px",
                 fontFamily: "var(--mono)",
                 outline: "none",
-                cursor: "pointer"
+                cursor: "pointer",
               }}
             >
               <option value="INR">INR (₹)</option>
@@ -375,17 +871,21 @@ function App() {
       {/* Control panel and AI Output stacked below */}
       <section className="dashboard-controls-section">
         <SearchPanel
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
           activeMode={activeMode}
           onModeChange={setActiveMode}
           onRunPrompt={handleRunPrompt}
           isPromptRunning={isPromptRunning}
+          selectedModel={selectedModel}
+          onModelChange={setSelectedModel}
+          selectedPdfs={selectedPdfs}
+          onPdfsChange={setSelectedPdfs}
         />
         <OutputPanel
           output={promptOutput}
           isRunning={isPromptRunning}
           activeMode={activeMode}
+          selectedModel={selectedModel}
+          extractionStatus={extractionStatus}
         />
       </section>
     </div>

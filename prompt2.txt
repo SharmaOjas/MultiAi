@@ -1,0 +1,10 @@
+Common Start (prepend to every prompt):  
+Analyze the provided annual report. Extract only information explicitly disclosed in the report.  
+  
+1. Board of Directors and Management Profile  
+- Key management personnel  
+- Board composition  
+  
+2. Corporate Governance Practices  
+- Number of board meetings  
+- Committee structures 

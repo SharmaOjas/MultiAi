@@ -75,6 +75,11 @@ export default defineConfig({
         target: 'https://api.frankfurter.app',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/frankfurter/, '')
+      },
+      // Proxy scrape requests to the local Puppeteer backend
+      '/api/scrape-filings': {
+        target: 'http://localhost:3001',
+        changeOrigin: true
       }
     }
   }

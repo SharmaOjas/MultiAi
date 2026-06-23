@@ -1,12 +1,26 @@
-function OutputPanel({ output, isRunning, activeMode }) {
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
+function OutputPanel({ output, isRunning, activeMode, selectedModel, extractionStatus }) {
   const getModeTitle = (mode) => {
     switch (mode) {
-      case 1: return "COMMODITY MACRO ANALYSIS";
-      case 2: return "INTEREST RATE MACRO ANALYSIS";
-      case 3: return "EQUITY INDEX MACRO ANALYSIS";
-      case 4: return "FOREX EXCHANGE MACRO ANALYSIS";
-      default: return "MACRO ANALYSIS OUTLOOK";
+      case 1: return "ANNUAL REPORT ANALYSIS — PROMPT 1";
+      case 2: return "ANNUAL REPORT ANALYSIS — PROMPT 2";
+      case 3: return "ANNUAL REPORT ANALYSIS — PROMPT 3";
+      case 4: return "ANNUAL REPORT ANALYSIS — PROMPT 4";
+      default: return "ANNUAL REPORT ANALYSIS";
     }
+  };
+
+  const getStatusText = () => {
+    if (extractionStatus) return extractionStatus;
+    return "Extracting and synthesizing report data...";
+  };
+
+  const getHeaderTitle = () => {
+    if (!isRunning) return getModeTitle(activeMode);
+    if (extractionStatus) return "PREPARING GROQ INPUT...";
+    return "SYNTHESIZING REPORT INTELLIGENCE...";
   };
 
   return (
@@ -15,7 +29,7 @@ function OutputPanel({ output, isRunning, activeMode }) {
         <div className="output-panel-title-group">
           <span className="output-indicator-dot" />
           <span className="output-panel-title">
-            {isRunning ? "SYNTHESIZING MARKET INTELLIGENCE..." : getModeTitle(activeMode)}
+            {getHeaderTitle()}
           </span>
         </div>
         <span className="output-terminal-badge">VIRTUAL LLM ENGINE</span>
@@ -25,11 +39,28 @@ function OutputPanel({ output, isRunning, activeMode }) {
         {isRunning ? (
           <div className="output-loader-container">
             <div className="output-loader-spinner" />
-            <span className="output-loader-text">Aggregating order books, yield curves, and index weightings...</span>
+            <span className="output-loader-text">{getStatusText()}</span>
           </div>
-        ) : output ? (
-          <div className="output-content-markdown animate-fade-in">
-            {output}
+        ) : output && (output.gemini || output.groq) ? (
+          <div className="output-content-markdown animate-fade-in" style={{ display: "flex", gap: "20px" }}>
+            {/* If Both, show two columns. Otherwise, show one column for the selected model. */}
+            {(selectedModel === "Both" || selectedModel === "Groq") && output.groq && (
+              <div style={{ flex: 1, minWidth: 0, overflowX: "auto" }}>
+                {selectedModel === "Both" && <h3 style={{ fontFamily: "var(--heading)", color: "var(--text-primary)", marginBottom: "12px" }}>Groq Analysis</h3>}
+                <div className="markdown-body">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{output.groq}</ReactMarkdown>
+                </div>
+              </div>
+            )}
+            {(selectedModel === "Both" || selectedModel === "Gemini" || selectedModel === "BothSummarized") && output.gemini && (
+              <div style={{ flex: 1, minWidth: 0, overflowX: "auto", borderLeft: selectedModel === "Both" ? "1px solid var(--border-color)" : "none", paddingLeft: selectedModel === "Both" ? "20px" : "0" }}>
+                {selectedModel === "Both" && <h3 style={{ fontFamily: "var(--heading)", color: "var(--text-primary)", marginBottom: "12px" }}>Gemini Analysis</h3>}
+                {selectedModel === "BothSummarized" && <h3 style={{ fontFamily: "var(--heading)", color: "var(--text-primary)", marginBottom: "12px" }}>Unified AI Report (Groq + Gemini)</h3>}
+                <div className="markdown-body">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{output.gemini}</ReactMarkdown>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="output-placeholder-container">
@@ -47,7 +78,7 @@ function OutputPanel({ output, isRunning, activeMode }) {
               />
             </svg>
             <p className="output-placeholder-text">
-              Analysis will appear here after Run Prompt is clicked.
+              Attach PDF reports and click Run Prompt to begin analysis.
             </p>
           </div>
         )}
@@ -57,3 +88,4 @@ function OutputPanel({ output, isRunning, activeMode }) {
 }
 
 export default OutputPanel;
+

@@ -1,0 +1,12 @@
+Common Start (prepend to every prompt):  
+Analyze the provided annual report. Extract only information explicitly disclosed in the report.  
+  
+1. Financial Ratios  
+- ROE, ROA, ROCE  
+- Current Ratio, Quick Ratio  
+- Debt to Equity  
+  
+2. DuPont Analysis  
+- Net Profit Margin  
+- Asset Turnover  
+- Equity Multiplier 

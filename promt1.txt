@@ -1,0 +1,175 @@
+Common Start (prepend to every prompt):
+
+Analyze the provided annual report (including Annual Report, Management Discussion & Analysis, Notes to Accounts, Corporate Governance Report, Auditor's Report, AOC-1, Investor Presentation, and financial statements). Extract only information explicitly disclosed in the report. Quote relevant figures, dates, percentages, and page numbers wherever available. Present the output in a structured table format. If information is not available, state "Not Disclosed".
+
+1. Business Overview
+Analyze the annual report and extract:
+- Line of business and nature of operations
+- Main products and services offered
+- Core business activities
+- Principal revenue-generating activities
+- Company overview and business model
+Include management commentary describing the company's business and competitive positioning.
+
+2. Business Segments
+Analyze the annual report and extract:
+- Operating segments reported by the company
+- Business divisions and segment descriptions
+- Revenue contribution by segment
+- Profitability/performance by segment
+- Geographical segments and regional revenue split
+- Segment-wise growth trends and management commentary
+Present segment information for the latest three years if disclosed.
+
+3. Annual Financials (3 Years)
+Revenue:
+- Revenue from Operations
+- Total Revenue / Total Income
+- Net Sales / Turnover
+- Other Income
+- YoY growth %
+Present both standalone and consolidated figures where available.
+
+EBITDA:
+- EBITDA / Operating Profit / PBDIT
+- EBITDA Margin %
+- Operating Margin %
+- Key drivers of margin expansion or contraction
+Include management explanations where disclosed.
+
+PAT:
+- Profit After Tax (PAT)
+- Net Profit
+- Profit attributable to shareholders
+- Basic EPS
+- Diluted EPS
+- YoY PAT growth %
+Include commentary on major profit drivers.
+
+4. Quarterly Financials (Last 3 Quarters)
+Extract:
+- Revenue from Operations
+- EBITDA / Operating Profit
+- EBITDA Margin
+- PAT / Net Profit
+- EPS
+- QoQ growth %
+- YoY growth %
+Summarize management commentary on quarterly performance.
+
+5. Auditor Details
+Auditor Name:
+- Name of Statutory Auditor
+- Audit Firm Registration Number (FRN)
+- Auditor's tenure
+- Type of audit opinion issued
+- Key Audit Matters (KAMs)
+
+Auditor Fees:
+- Audit fees paid to statutory auditors
+- Fees for tax, certification, advisory, and other services
+- Total remuneration paid to auditors
+
+Auditor Appointment:
+- Auditor appointment/reappointment details
+- AGM resolution details
+- Term of appointment
+- Effective dates
+- Retirement and replacement details, if any
+
+6. Subsidiaries, Associates & Joint Ventures
+Extract:
+- List of subsidiaries
+- Associate companies
+- Joint ventures
+- Ownership percentages
+- Country of incorporation
+- Financial performance of subsidiaries
+- New entities incorporated/acquired during the year
+- Entities liquidated, merged, or divested
+
+7. New Business Verticals & Growth Initiatives
+Extract:
+- New business verticals
+- New product launches
+- New service offerings
+- Diversification initiatives
+- Entry into new markets
+- Emerging business opportunities
+- Strategic investments supporting future growth
+
+8. Latest Developments & Strategic Initiatives
+Extract:
+- Major milestones achieved during the year
+- Strategic initiatives undertaken
+- Key operational achievements
+- Expansion plans
+- Technology investments
+- ESG and sustainability initiatives
+- Significant announcements made by management
+
+9. M&A / Divestments
+Extract:
+- Acquisitions
+- Mergers
+- Takeovers
+- Amalgamations
+- Slump sales
+- Business transfers
+- Divestments
+- Asset sales
+For each transaction provide:
+- Target/company name
+- Transaction value
+- Date
+- Strategic rationale
+- Expected benefits
+
+10. Capital Markets Activities
+Extract:
+- IPO
+- FPO
+- OFS
+- Rights Issue
+- QIP
+- Preferential Allotment
+- Warrants/Convertible Instruments
+- Debt raising activities
+Include:
+- Amount raised
+- Date
+- Purpose of funds
+- Utilization status
+
+11. Operations & Business Outlook
+Extract:
+- Management outlook for the next 1–3 years
+- Order book and new orders won
+- Capacity utilization
+- Capacity expansion plans
+- Operational efficiency initiatives
+- Fundraising plans
+- Industry growth expectations
+
+12. Risks & Headwinds
+Extract all risks discussed in:
+- Risk Management section
+- MD&A
+- Auditor observations
+- Notes to Accounts
+
+Categorize risks into:
+- Macroeconomic risks
+- Industry risks
+- Regulatory risks
+- Supply chain risks
+- Technology risks
+- Competition risks
+- Financial risks
+- ESG and sustainability risks
+
+Universal Output Instruction:
+Create a structured output with columns:
+Category | Extracted Information | Financial Impact (if any) | Page Number | Source Section | Management Commentary.
+
+Do not infer or estimate information not explicitly disclosed.
