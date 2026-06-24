@@ -27,6 +27,24 @@ import promptTemplate3 from "../prompt3.txt?raw";
 import promptTemplate4 from "../prompt4.txt?raw";
 import "./App.css";
 
+const formatErrorMessage = (errorMsg) => {
+  if (!errorMsg) return errorMsg;
+  const msg = errorMsg.toString();
+  if (msg.includes("exceeds the maximum number of tokens allowed") || msg.includes("context length") || msg.includes("maximum context length")) {
+    return "⚠️ The PDFs attached are too large. Please upload fewer or shorter documents.";
+  }
+  if (msg.includes("503") || msg.includes("high demand") || msg.includes("temporarily overloaded") || msg.includes("Service Unavailable")) {
+    return "⚠️ The AI servers are currently experiencing a sudden spike in traffic. Please wait a minute and try again.";
+  }
+  if (msg.includes("429") || msg.includes("quota") || msg.includes("rate limit") || msg.includes("Too Many Requests")) {
+    return "⚠️ You have reached the API request limit. Please wait a few moments before trying again.";
+  }
+  if (msg.includes("401") || msg.includes("API_KEY") || msg.includes("Unauthorized")) {
+    return "⚠️ There is an issue with the API key or authentication.";
+  }
+  return msg;
+};
+
 // Dynamic financial database — starts empty (shows "--" until API provides real data)
 const initialDataTemplate = {
   commodity: [
@@ -749,8 +767,8 @@ Analyze the documents content provided above according to the instructions in th
         // If either underlying API failed, abort the synthesis and show the raw errors
         if (geminiRes.startsWith("Error") || groqRes.startsWith("Error")) {
           setPromptOutput({ 
-            gemini: geminiRes.startsWith("Error") ? geminiRes : "Gemini succeeded, but synthesis aborted due to Groq error.", 
-            groq: groqRes.startsWith("Error") ? groqRes : "Groq succeeded, but synthesis aborted due to Gemini error." 
+            gemini: geminiRes.startsWith("Error") ? formatErrorMessage(geminiRes) : "Gemini succeeded, but synthesis aborted due to Groq error.", 
+            groq: groqRes.startsWith("Error") ? formatErrorMessage(groqRes) : "Groq succeeded, but synthesis aborted due to Gemini error." 
           });
           setIsPromptRunning(false);
           setExtractionStatus("");
@@ -772,15 +790,18 @@ ${geminiRes}
 ### Unified Report:`;
 
         const summaryRes = await fetchGeminiAnalysis(summaryPrompt);
-        setPromptOutput({ gemini: summaryRes, groq: "" });
+        setPromptOutput({ gemini: summaryRes.startsWith("Error") ? formatErrorMessage(summaryRes) : summaryRes, groq: "" });
       } else {
-        setPromptOutput({ gemini: geminiRes, groq: groqRes });
+        setPromptOutput({ 
+          gemini: geminiRes.startsWith("Error") ? formatErrorMessage(geminiRes) : geminiRes, 
+          groq: groqRes.startsWith("Error") ? formatErrorMessage(groqRes) : groqRes 
+        });
       }
     } catch (error) {
       console.error(error);
       setPromptOutput({
-        gemini: `Error fetching analysis: ${error.message}`,
-        groq: `Error fetching analysis: ${error.message}`,
+        gemini: formatErrorMessage(`Error fetching analysis: ${error.message}`),
+        groq: formatErrorMessage(`Error fetching analysis: ${error.message}`),
       });
     } finally {
       setIsPromptRunning(false);
