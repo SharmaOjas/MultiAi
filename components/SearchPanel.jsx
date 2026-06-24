@@ -127,6 +127,9 @@ function SearchPanel({
 
       {/* Prompt Editor */}
       <div className="prompt-editor-wrapper" style={{ padding: '0 8px 8px 8px' }}>
+        <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '8px', fontFamily: 'var(--mono)', fontWeight: 'bold', textTransform: 'uppercase' }}>
+          Edit Prompt (Optional)
+        </div>
         <textarea
           value={editablePrompt}
           onChange={(e) => onPromptEdit(e.target.value)}
