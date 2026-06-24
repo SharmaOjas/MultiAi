@@ -6,7 +6,9 @@ function SearchPanel({
   selectedModel,
   onModelChange,
   selectedPdfs,
-  onPdfsChange
+  onPdfsChange,
+  editablePrompt,
+  onPromptEdit
 }) {
   const modes = [
     { num: 1, label: "Prompt 1", active: true },
@@ -16,7 +18,8 @@ function SearchPanel({
   ];
 
   return (
-    <div className="search-control-panel-row">
+    <div className="search-panel-container" style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
+      <div className="search-control-panel-row">
       {/* PDF Upload Button */}
       <div style={{ display: "flex", alignItems: "center", marginLeft: "8px" }}>
         <input
@@ -120,6 +123,30 @@ function SearchPanel({
           </>
         )}
       </button>
+      </div>
+
+      {/* Prompt Editor */}
+      <div className="prompt-editor-wrapper" style={{ padding: '0 8px 8px 8px' }}>
+        <textarea
+          value={editablePrompt}
+          onChange={(e) => onPromptEdit(e.target.value)}
+          placeholder="Edit your prompt before running..."
+          style={{
+            width: '100%',
+            minHeight: '120px',
+            backgroundColor: 'var(--bg-card)',
+            color: 'var(--text-primary)',
+            border: '1px solid var(--border-color)',
+            borderRadius: '6px',
+            padding: '12px',
+            fontSize: '13px',
+            fontFamily: 'var(--mono)',
+            resize: 'vertical',
+            outline: 'none',
+            boxSizing: 'border-box'
+          }}
+        />
+      </div>
     </div>
   );
 }

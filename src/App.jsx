@@ -409,6 +409,17 @@ function App() {
   const [selectedModel, setSelectedModel] = useState("BothSummarized");
   const [selectedPdfs, setSelectedPdfs] = useState([]); // Array of PDF files
   const [extractionStatus, setExtractionStatus] = useState("");
+  const [editablePrompt, setEditablePrompt] = useState(promptTemplate1);
+
+  useEffect(() => {
+    switch (activeMode) {
+      case 1: setEditablePrompt(promptTemplate1); break;
+      case 2: setEditablePrompt(promptTemplate2); break;
+      case 3: setEditablePrompt(promptTemplate3); break;
+      case 4: setEditablePrompt(promptTemplate4); break;
+      default: setEditablePrompt(promptTemplate1);
+    }
+  }, [activeMode]);
 
   const marketDataRef = useRef(marketData);
   useEffect(() => {
@@ -665,26 +676,8 @@ function App() {
     // ── Step 2: Build the clean prompt (no boilerplate market text) ──────────
     const reportSource = `Manual upload: ${selectedPdfs.map((p) => `"${p.name}"`).join(", ")}`;
 
-    let activePromptTemplate;
-    switch (activeMode) {
-      case 1:
-        activePromptTemplate = promptTemplate1;
-        break;
-      case 2:
-        activePromptTemplate = promptTemplate2;
-        break;
-      case 3:
-        activePromptTemplate = promptTemplate3;
-        break;
-      case 4:
-        activePromptTemplate = promptTemplate4;
-        break;
-      default:
-        activePromptTemplate = promptTemplate1;
-    }
-
     const geminiPrompt = `System Instructions:
-${activePromptTemplate}
+${editablePrompt}
 
 Report Source: ${reportSource}
 
@@ -712,7 +705,7 @@ Analyze the documents provided above according to the instructions in the System
     }
 
     const groqPrompt = `System Instructions:
-${activePromptTemplate}
+${editablePrompt}
 
 Report Source: ${reportSource}
 
@@ -879,6 +872,8 @@ ${geminiRes}
           onModelChange={setSelectedModel}
           selectedPdfs={selectedPdfs}
           onPdfsChange={setSelectedPdfs}
+          editablePrompt={editablePrompt}
+          onPromptEdit={setEditablePrompt}
         />
         <OutputPanel
           output={promptOutput}
