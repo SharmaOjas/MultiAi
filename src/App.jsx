@@ -406,7 +406,7 @@ function App() {
   const [activeMode, setActiveMode] = useState(1);
   const [isPromptRunning, setIsPromptRunning] = useState(false);
   const [promptOutput, setPromptOutput] = useState({ gemini: "", groq: "" });
-  const [selectedModel, setSelectedModel] = useState("Both");
+  const [selectedModel, setSelectedModel] = useState("BothSummarized");
   const [selectedPdfs, setSelectedPdfs] = useState([]); // Array of PDF files
   const [extractionStatus, setExtractionStatus] = useState("");
 
