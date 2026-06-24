@@ -99,7 +99,7 @@ export async function fetchGroqAnalysis(promptText) {
           content: promptText,
         },
       ],
-      model: "llama-3.3-70b-versatile",
+      model: "openai/gpt-oss-120b",
     });
     return completion.choices[0]?.message?.content || "No response received.";
   } catch (error) {
