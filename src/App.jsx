@@ -746,6 +746,17 @@ Analyze the documents content provided above according to the instructions in th
       await Promise.all(fetchTasks);
 
       if (selectedModel === "BothSummarized") {
+        // If either underlying API failed, abort the synthesis and show the raw errors
+        if (geminiRes.startsWith("Error") || groqRes.startsWith("Error")) {
+          setPromptOutput({ 
+            gemini: geminiRes.startsWith("Error") ? geminiRes : "Gemini succeeded, but synthesis aborted due to Groq error.", 
+            groq: groqRes.startsWith("Error") ? groqRes : "Groq succeeded, but synthesis aborted due to Gemini error." 
+          });
+          setIsPromptRunning(false);
+          setExtractionStatus("");
+          return;
+        }
+
         setPromptOutput({
           gemini: "",
           groq: "Synthesizing a unified report from Groq and Gemini...",
